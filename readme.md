@@ -11,9 +11,10 @@ A framework I am creating for fun and educational purposes, thus the reason I pi
 - [ ] Score listing
 - [ ] Score Submitting
 - [ ] Multiplayer
-- [ ] Chat (Partially done)
+- [X] Chat
+- [ ] Private Message
 - [X] Avatar
-- [ ] Online user list
+- [ ] Online user list (can be possible)
 - [X] Packet Receiving
 
 
