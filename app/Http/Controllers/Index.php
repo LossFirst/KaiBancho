@@ -29,7 +29,7 @@ class Index extends Controller
             return $this->loginFunction($content[0], $content[1], $extraData[0]);
         }
         $user = Cache::get($osutoken);
-        Cache::add($osutoken, $user, 10);
+        Cache::put($osutoken, $user, 10);
         $body = $request->getContent();
         $asciiarray = unpack('C*', $body);
         Log::info($asciiarray);
@@ -40,36 +40,64 @@ class Index extends Controller
 
     function checkPacket($data, $user, $osutoken)
     {
-        switch($data[1])
-        {
+        switch($data[1]) {
             case 1: //Chat message
                 $message = array();
-                foreach (array_slice($data, 11) as $item)
-                {
-                    if($item == 11)
-                    {
+                foreach (array_slice($data, 11) as $item) {
+                    if ($item == 11) {
                         break;
                     }
                     array_push($message, $item);
                 }
                 $channel = array();
-                foreach (array_slice($data, 11+count($message)+2) as $item)
-                {
-                    if($item == 0)
-                    {
+                foreach (array_slice($data, 11 + count($message) + 2) as $item) {
+                    if ($item == 0) {
                         break;
                     }
                     array_push($channel, $item);
                 }
-                $output = array_merge(
-                    $this->CreatePacket(07, array($user->name, implode(array_map("chr", $message)), implode(array_map("chr", $channel)), $user->id))
-                );
+                if(Cache::has('currentLogin')) {
+                    $currentLogins = Cache::get("currentLogin");
+                    Log::info($currentLogins);
+                    foreach ($currentLogins as $token) {
+                        if ($token != $osutoken) {
+                            $previousData = Cache::get($token . "_chat");
+                            if (isset($previousData)) {
+                                Cache::put($token . "_chat", array_merge($previousData,
+                                    $this->CreatePacket(07, array($user->name, implode(array_map("chr", $message)), implode(array_map("chr", $channel)), $user->id))
+                                ), 1);
+                            } else {
+                                Cache::put($token . "_chat", array_merge($this->CreatePacket(07, array($user->name, implode(array_map("chr", $message)), implode(array_map("chr", $channel)), $user->id))), 1);
+                            }
+                        }
+                    }
+                }
+                $output = array();
                 break;
             case 2: //Logout packet
                 Cache::forget($osutoken);
+                if(cache::has('currentLogin'))
+                {
+                    $data = cache::get('currentLogin');
+                    foreach($data as $id=>$key)
+                    {
+                        if($key == $osutoken)
+                        {
+                            unset($data[$key]);
+                            break;
+                        }
+                    }
+                    cache::put('currentLogin', $data, 60);
+                }
                 break;
             case 4: //Default update (Need to work on this)
-                $output = array();
+                $chat = cache::get($osutoken . "_chat");
+                if (isset($chat)) {
+                    $output = $chat;
+                    Cache::forget($osutoken . "_chat");
+                }
+                else
+                    $output = array();
                 break;
             case 68: //Join channel?
                 if(array_slice($data, -4)[1] == 35)
@@ -148,9 +176,20 @@ class Index extends Controller
                 $this->CreatePacket(65, array('#aqn', 'cuz fuck yeah', 1337)),
                 $this->CreatePacket(07, array('KaiBanchoo', 'This is a test message! First step to getting chat working!', '#osu', 3))
             );
+            //Cache::flush();
             $token = $this->generateToken();
             Cache::put($token, $user, 10);
-
+            if(Cache::has('currentLogin'))
+            {
+                $currentLogin = Cache::get('currentLogin');
+                $data = array_merge($currentLogin, array($token));
+                Log::info($data);
+                Cache::put('currentLogin', $data, 60);
+            } else {
+                $data = array($token);
+                Log::info($data);
+                Cache::put('currentLogin', $data, 60);
+            }
             return Response::make(implode(array_map("chr", $output)), 200, ['cho-token' => $token]);
         } else {
             Log::info($username . " has failed to logged in");
