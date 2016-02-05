@@ -12,9 +12,9 @@ A framework I am creating for fun and educational purposes, thus the reason I pi
 - [ ] Score Submitting
 - [ ] Multiplayer
 - [X] Chat
-- [ ] Private Message
+- [X] Private Message
 - [X] Avatar
-- [ ] Online user list (can be possible)
+- [X] Online user list (Mostly working, needs to clear list after logout)
 - [X] Packet Receiving
 
 
@@ -27,6 +27,7 @@ Not telling you how to setup Laravel/Homestead
 - Osu! Stable(Fallback)
 - Redis/Memcached
 - HHVM/PHP7/PHP5.6
+- Cron Job
 
 Hosts
 ```

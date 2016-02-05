@@ -35,10 +35,7 @@ class Index extends Controller
         $user = Cache::tags(['user'])->get($osutoken);
         Cache::tags(['user'])->put($osutoken, $user, 1);
         $body = $request->getContent();
-        $asciiarray = unpack('C*', $body);
-        Log::info($asciiarray);
-        Log::info(sprintf("PACKET: %s", implode(array_map("chr", $asciiarray))));
-        $output = $packet->check($asciiarray, $user, $osutoken);
+        $output = $packet->check(unpack('C*', $body), $user, $osutoken);
         return $output;
     }
 

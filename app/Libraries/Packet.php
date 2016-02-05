@@ -106,6 +106,7 @@ class Packet {
     
     public function check($data, $user, $osutoken)
     {
+        $player = new Player();
         $helper = new Helper();
         $output = array();
         switch($data[1]) {
@@ -139,19 +140,59 @@ class Packet {
                         }
                     }
                 }
-                $output = array();
                 break;
             case 2: //Logout packet
                 Log::info("Logout packet was called?"); //Only gets called when you Alt+F4 (weird)
                 Cache::forget($osutoken);
                 break;
             case 4: //Default update (Need to work on this)
+                if(Cache::has('currentLogin'))
+                {
+                    $output = $player->getAllDetailed();
+                }
                 if (Cache::tags(['userChat'])->has($osutoken)) {
-                    $output = Cache::tags(['userChat'])->get($osutoken);
+                    $output = array_merge($output, Cache::tags(['userChat'])->get($osutoken));
                     Cache::tags(['userChat'])->forget($osutoken);
                 }
-                else
-                    $output = array();
+                break;
+            case 25:
+                if(Cache::has('currentLogin'))
+                {
+                    $message = array();
+                    foreach (array_slice($data, 11) as $item) {
+                        if ($item == 11) {
+                            break;
+                        }
+                        array_push($message, $item);
+                    }
+                    $toPerson = array();
+                    foreach (array_slice($data, 11 + count($message) + 2) as $item) {
+                        if ($item == 0) {
+                            break;
+                        }
+                        array_push($toPerson, $item);
+                    }
+                    $currentLogins = Cache::get("currentLogin");
+                    foreach($currentLogins as $token)
+                    {
+                        if(Cache::tags(['user'])->has($token))
+                        {
+                            $person = Cache::tags(['user'])->get($token);
+                            if($person->name == implode(array_map("chr", $toPerson)))
+                            {
+                                if (Cache::tags(['userChat'])->has($token)) {
+                                    $previousMessages = Cache::tags(['userChat'])->get($token);
+                                    Cache::tags(['userChat'])->put($token, array_merge($previousMessages,
+                                        $this->create(07, array($user->name, implode(array_map("chr", $message)), implode(array_map("chr", $toPerson)), $user->id))
+                                    ), 1);
+                                } else {
+                                    Cache::tags(['userChat'])->put($token, array_merge($this->create(07, array($user->name, implode(array_map("chr", $message)), implode(array_map("chr", $toPerson)), $user->id))), 1);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
                 break;
             case 68: //Join channel?
                 if(array_slice($data, -4)[1] == 35)
@@ -167,6 +208,8 @@ class Packet {
                 $output = array();
                 break;
             default:
+                Log::info($data);
+                Log::info(sprintf("PACKET: %s", implode(array_map("chr", $data))));
                 $output = array();
                 break;
         }
