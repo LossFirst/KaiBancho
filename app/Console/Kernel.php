@@ -4,6 +4,7 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Cache;
 
 class Kernel extends ConsoleKernel
 {
@@ -24,7 +25,19 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('inspire')
-                 ->hourly();
+        $schedule->call(function () {
+            if(Cache::has('currentLogin'))
+            {
+                $currentUsers = cache::get('currentLogin');
+                foreach($currentUsers as $key => $token)
+                {
+                    if(!cache::has($token))
+                    {
+                        unset($currentUsers[$key]);
+                    }
+                }
+                cache::put('currentLogin', $currentUsers);
+            }
+        })->everyMinute();
     }
 }

@@ -22,7 +22,11 @@ A framework I am creating for fun and educational purposes, thus the reason I pi
 
 Not telling you how to setup Laravel/Homestead
 
-Uses Stable(Fallback)
+### Requirements
+
+- Osu! Stable(Fallback)
+- Redis/Memcached
+- HHVM/PHP7/PHP5.6
 
 Hosts
 ```
@@ -38,7 +42,7 @@ This KaiBanchoo is licensed under the Creative Commons Attribution-NonCommercial
 
 Full license can be found in LICENSE.md
 
-#Short Form
+### Short Form
 
 - Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
 - NonCommercial — You may not use the material for commercial purposes.
