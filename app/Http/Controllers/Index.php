@@ -48,14 +48,12 @@ class Index extends Controller
             $user = Auth::user();
             Log::info($username . " has logged in");
 
-            $allUsers = $player->getAll();
-
             $output = array_merge(
                 $packet->create(92, $user->bantime),	//ban status/time
                 $packet->create(5, $user->id),	//user id
                 $packet->create(75, 19),	//bancho protocol version
                 $packet->create(71, $user->usergroup),	//user rank (supporter etc)
-                $packet->create(72, array(3, 4)),	//friend list
+                //$packet->create(72, array(3, 4)),	//friend list
                 $packet->create(83, array(	//local player
                     'id' => $user->id,
                     'playerName' => $user->name,
@@ -81,17 +79,6 @@ class Index extends Controller
                     'int1' => 0,	//int 	global rank?
                     'pp' => $user->pp_raw,			//short	pp 				if set, will use?
                 )),
-                $packet->create(83, array(	//bancho bob
-                    'id' => 2,
-                    'playerName' => 'KaiBanchoo',
-                    'utcOffset' => 0 + 24,
-                    'country' => 1,
-                    'playerRank' => 0,
-                    'longitude' => 0,
-                    'latitude' => 0,
-                    'globalRank' => 0,
-                )),
-                $packet->create(96, array_merge($allUsers, array($user->id))),
                 $packet->create(89, null),
                 //foreach player online, packet 12 or 95
                 $packet->create(64, '#osu'),	//main channel

@@ -106,58 +106,20 @@ class Packet {
     
     public function check($data, $user, $osutoken)
     {
-        $player = new Player();
-        $helper = new Helper();
         $output = array();
-        switch($data[1]) {
-            case 1: //Chat message
-                $message = array();
-                foreach (array_slice($data, 11) as $item) {
-                    if ($item == 11) {
-                        break;
+        if (is_array($data)) {
+            $player = new Player();
+            $helper = new Helper();
+            switch ($data[1]) {
+                case 0: //A more indepth packet
+                    switch ($data[4]) {
+                        default:
+                            Log::info($data);
+                            Log::info(sprintf("PACKET: %s", implode(array_map("chr", $data))));
+                            break;
                     }
-                    array_push($message, $item);
-                }
-                $channel = array();
-                foreach (array_slice($data, 11 + count($message) + 2) as $item) {
-                    if ($item == 0) {
-                        break;
-                    }
-                    array_push($channel, $item);
-                }
-                if(Cache::has('currentLogin')) {
-                    $currentLogins = Cache::get("currentLogin");
-                    foreach ($currentLogins as $token) {
-                        if ($token != $osutoken) {
-                            if (Cache::tags(['userChat'])->has($token)) {
-                                $previousMessages = Cache::tags(['userChat'])->get($token);
-                                Cache::tags(['userChat'])->put($token, array_merge($previousMessages,
-                                    $this->create(07, array($user->name, implode(array_map("chr", $message)), implode(array_map("chr", $channel)), $user->id))
-                                ), 1);
-                            } else {
-                                Cache::tags(['userChat'])->put($token, array_merge($this->create(07, array($user->name, implode(array_map("chr", $message)), implode(array_map("chr", $channel)), $user->id))), 1);
-                            }
-                        }
-                    }
-                }
-                break;
-            case 2: //Logout packet
-                Log::info("Logout packet was called?"); //Only gets called when you Alt+F4 (weird)
-                Cache::forget($osutoken);
-                break;
-            case 4: //Default update (Need to work on this)
-                if(Cache::has('currentLogin'))
-                {
-                    $output = $player->getAllDetailed();
-                }
-                if (Cache::tags(['userChat'])->has($osutoken)) {
-                    $output = array_merge($output, Cache::tags(['userChat'])->get($osutoken));
-                    Cache::tags(['userChat'])->forget($osutoken);
-                }
-                break;
-            case 25:
-                if(Cache::has('currentLogin'))
-                {
+                    break;
+                case 1: //Chat message
                     $message = array();
                     foreach (array_slice($data, 11) as $item) {
                         if ($item == 11) {
@@ -165,53 +127,110 @@ class Packet {
                         }
                         array_push($message, $item);
                     }
-                    $toPerson = array();
+                    $channel = array();
                     foreach (array_slice($data, 11 + count($message) + 2) as $item) {
                         if ($item == 0) {
                             break;
                         }
-                        array_push($toPerson, $item);
+                        array_push($channel, $item);
                     }
-                    $currentLogins = Cache::get("currentLogin");
-                    foreach($currentLogins as $token)
-                    {
-                        if(Cache::tags(['user'])->has($token))
-                        {
-                            $person = Cache::tags(['user'])->get($token);
-                            if($person->name == implode(array_map("chr", $toPerson)))
-                            {
+                    if (Cache::has('currentLogin')) {
+                        $currentLogins = Cache::get("currentLogin");
+                        foreach ($currentLogins as $token) {
+                            if ($token != $osutoken) {
                                 if (Cache::tags(['userChat'])->has($token)) {
                                     $previousMessages = Cache::tags(['userChat'])->get($token);
                                     Cache::tags(['userChat'])->put($token, array_merge($previousMessages,
-                                        $this->create(07, array($user->name, implode(array_map("chr", $message)), implode(array_map("chr", $toPerson)), $user->id))
+                                        $this->create(07, array($user->name, implode(array_map("chr", $message)), implode(array_map("chr", $channel)), $user->id))
                                     ), 1);
                                 } else {
-                                    Cache::tags(['userChat'])->put($token, array_merge($this->create(07, array($user->name, implode(array_map("chr", $message)), implode(array_map("chr", $toPerson)), $user->id))), 1);
+                                    Cache::tags(['userChat'])->put($token, array_merge($this->create(07, array($user->name, implode(array_map("chr", $message)), implode(array_map("chr", $channel)), $user->id))), 1);
                                 }
-                                break;
                             }
                         }
                     }
-                }
-                break;
-            case 68: //Join channel?
-                if(array_slice($data, -4)[1] == 35)
-                {
+                    break;
+                case 2: //Logout packet
+                    Log::info("Logout packet was called?"); //Only gets called when you Alt+F4 (weird)
+                    Cache::forget($osutoken);
+                    break;
+                case 3: //Initial fetch for local player OR could be the data for getting all players (Would make even more sense)
                     $output = array_merge(
-                        $this->create(64, implode(array_map("chr", array_slice($data, -4))))
-                    );
-                } else {
-                    $output = array();
-                }
-                break;
-            case 85: //PM
-                $output = array();
-                break;
-            default:
-                Log::info($data);
-                Log::info(sprintf("PACKET: %s", implode(array_map("chr", $data))));
-                $output = array();
-                break;
+                        $this->create(83, array(	//bancho bob
+                            'id' => 2,
+                            'playerName' => 'KaiBanchoo',
+                            'utcOffset' => 0 + 24,
+                            'country' => 1,
+                            'playerRank' => 0,
+                            'longitude' => 0,
+                            'latitude' => 0,
+                            'globalRank' => 0,
+                        )),
+                        $this->create(96, array_merge($player->getAll(), array($user->id))));
+                    break;
+                case 4: //Default update (Need to work on this)
+                    if (Cache::has('currentLogin')) {
+                        $output = $player->getAllDetailed();
+                    }
+                    if (Cache::tags(['userChat'])->has($osutoken)) {
+                        $output = array_merge($output, Cache::tags(['userChat'])->get($osutoken));
+                        Cache::tags(['userChat'])->forget($osutoken);
+                    }
+                    break;
+                case 16: //Spectating [$data[8] = targeted user]
+                    break;
+                case 25: //Private Message
+                    if (Cache::has('currentLogin')) {
+                        $message = array();
+                        foreach (array_slice($data, 11) as $item) {
+                            if ($item == 11) {
+                                break;
+                            }
+                            array_push($message, $item);
+                        }
+                        $toPerson = array();
+                        foreach (array_slice($data, 11 + count($message) + 2) as $item) {
+                            if ($item == 0) {
+                                break;
+                            }
+                            array_push($toPerson, $item);
+                        }
+                        $currentLogins = Cache::get("currentLogin");
+                        foreach ($currentLogins as $token) {
+                            if (Cache::tags(['user'])->has($token)) {
+                                $person = Cache::tags(['user'])->get($token);
+                                if ($person->name == implode(array_map("chr", $toPerson))) {
+                                    if (Cache::tags(['userChat'])->has($token)) {
+                                        $previousMessages = Cache::tags(['userChat'])->get($token);
+                                        Cache::tags(['userChat'])->put($token, array_merge($previousMessages,
+                                            $this->create(07, array($user->name, implode(array_map("chr", $message)), implode(array_map("chr", $toPerson)), $user->id))
+                                        ), 1);
+                                    } else {
+                                        Cache::tags(['userChat'])->put($token, array_merge($this->create(07, array($user->name, implode(array_map("chr", $message)), implode(array_map("chr", $toPerson)), $user->id))), 1);
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case 68: //Join channel?
+                    if (array_slice($data, -4)[1] == 35) {
+                        $output = array_merge(
+                            $this->create(64, implode(array_map("chr", array_slice($data, -4))))
+                        );
+                    }
+                    break;
+                case 73: //Add friend [$data[8] = targeted user]
+                case 74: //Remove friend [$data[8] = targeted user]
+                case 79: //Not sure, might be getting more information on targeted user [$data[8] = targeted user]
+                case 85: //Not sure, but sends a packet every second if PM box is opened [$data[8] = targeted user]
+                    break;
+                default:
+                    Log::info($data);
+                    Log::info(sprintf("PACKET: %s", implode(array_map("chr", $data))));
+                    break;
+            }
         }
         return implode(array_map("chr", $output));
     }
