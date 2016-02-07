@@ -5,13 +5,9 @@ namespace App\Libraries;
 use Cache;
 use Log;
 
-use App\Libraries\Helper as Helper;
-
 class Packet {
     public function create($type, $data = null) {
         $helper = new Helper();
-        $toreturn = '';
-        $length = 0;
         switch ($type) {
             //string
             case 24:	//show custom, orange notification
@@ -29,7 +25,6 @@ class Packet {
                 break;
             //Class17 (player data 02)
             case 83:	//local player
-                $toreturn = array();
                 $toreturn = array_merge(
                     unpack('C*', pack('L*', $data['id'])),
                     $helper->ULeb128($data['playerName']),				//TODO: fix names
@@ -120,111 +115,47 @@ class Packet {
                     }
                     break;
                 case 1: //Chat message
-                    $message = array();
-                    foreach (array_slice($data, 11) as $item) {
-                        if ($item == 11) {
-                            break;
-                        }
-                        array_push($message, $item);
-                    }
-                    $channel = array();
-                    foreach (array_slice($data, 11 + count($message) + 2) as $item) {
-                        if ($item == 0) {
-                            break;
-                        }
-                        array_push($channel, $item);
-                    }
-                    if (Cache::has('currentLogin')) {
-                        $currentLogins = Cache::get("currentLogin");
-                        foreach ($currentLogins as $token) {
-                            if ($token != $osutoken) {
-                                if (Cache::tags(['userChat'])->has($token)) {
-                                    $previousMessages = Cache::tags(['userChat'])->get($token);
-                                    Cache::tags(['userChat'])->put($token, array_merge($previousMessages,
-                                        $this->create(07, array($user->name, implode(array_map("chr", $message)), implode(array_map("chr", $channel)), $user->id))
-                                    ), 1);
-                                } else {
-                                    Cache::tags(['userChat'])->put($token, array_merge($this->create(07, array($user->name, implode(array_map("chr", $message)), implode(array_map("chr", $channel)), $user->id))), 1);
-                                }
-                            }
-                        }
-                    }
+                    $message = new Message();
+                    $output = $message->sendToChannel($data, $user);
                     break;
-                case 2: //Logout packet
-                    Log::info("Logout packet was called?"); //Only gets called when you Alt+F4 (weird)
+                case 2: //Logout packet (Only gets called if you Alt+F4)
                     Cache::forget($osutoken);
                     break;
                 case 3: //Initial fetch for local player OR could be the data for getting all players (Would make even more sense)
+                    $bot = (object)array('id' => 2, 'name' => "KaiBanchoo", 'country' => 2);
                     $output = array_merge(
-                        $this->create(83, array(	//bancho bob
-                            'id' => 2,
-                            'playerName' => 'KaiBanchoo',
-                            'utcOffset' => 0 + 24,
-                            'country' => 1,
-                            'playerRank' => 0,
-                            'longitude' => 0,
-                            'latitude' => 0,
-                            'globalRank' => 0,
-                        )),
-                        $this->create(96, array_merge($player->getAll(), array($user->id))));
+                        $this->create(83, $player->getData($bot)));
                     break;
-                case 4: //Default update (Need to work on this)
-                    if (Cache::has('currentLogin')) {
-                        $output = $player->getAllDetailed();
-                    }
-                    if (Cache::tags(['userChat'])->has($osutoken)) {
-                        $output = array_merge($output, Cache::tags(['userChat'])->get($osutoken));
-                        Cache::tags(['userChat'])->forget($osutoken);
+                case 4: //TODO: Default update
+                    if(Cache::tags(['userChat'])->has($user->id)) {
+                        $output = array_merge($output, Cache::tags(['userChat'])->get($user->id));
+                        Cache::tags(['userChat'])->forget($user->id);
                     }
                     break;
-                case 16: //Spectating [$data[8] = targeted user]
+                case 16: //TODO: Spectating [$data[8] = targeted user]
                     break;
                 case 25: //Private Message
-                    if (Cache::has('currentLogin')) {
-                        $message = array();
-                        foreach (array_slice($data, 11) as $item) {
-                            if ($item == 11) {
-                                break;
-                            }
-                            array_push($message, $item);
-                        }
-                        $toPerson = array();
-                        foreach (array_slice($data, 11 + count($message) + 2) as $item) {
-                            if ($item == 0) {
-                                break;
-                            }
-                            array_push($toPerson, $item);
-                        }
-                        $currentLogins = Cache::get("currentLogin");
-                        foreach ($currentLogins as $token) {
-                            if (Cache::tags(['user'])->has($token)) {
-                                $person = Cache::tags(['user'])->get($token);
-                                if ($person->name == implode(array_map("chr", $toPerson))) {
-                                    if (Cache::tags(['userChat'])->has($token)) {
-                                        $previousMessages = Cache::tags(['userChat'])->get($token);
-                                        Cache::tags(['userChat'])->put($token, array_merge($previousMessages,
-                                            $this->create(07, array($user->name, implode(array_map("chr", $message)), implode(array_map("chr", $toPerson)), $user->id))
-                                        ), 1);
-                                    } else {
-                                        Cache::tags(['userChat'])->put($token, array_merge($this->create(07, array($user->name, implode(array_map("chr", $message)), implode(array_map("chr", $toPerson)), $user->id))), 1);
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    }
+                    $message = new Message();
+                    $output = $message->sendToPlayer($data, $user);
                     break;
-                case 68: //Join channel?
+                case 64: //Remove channel ($data[10]+ = Channel Name)
+                    break;
+                case 68: //Join channel
                     if (array_slice($data, -4)[1] == 35) {
                         $output = array_merge(
                             $this->create(64, implode(array_map("chr", array_slice($data, -4))))
                         );
                     }
                     break;
-                case 73: //Add friend [$data[8] = targeted user]
-                case 74: //Remove friend [$data[8] = targeted user]
-                case 79: //Not sure, might be getting more information on targeted user [$data[8] = targeted user]
-                case 85: //Not sure, but sends a packet every second if PM box is opened [$data[8] = targeted user]
+                case 73: //TODO: Add friend [$data[8] = targeted user]
+                case 74: //TODO: Remove friend [$data[8] = targeted user]
+                    break;
+                case 79: //Gets all users online
+                    //$output = $player->getOnline();
+                    break;
+                case 85: //Updates all users, also checks if they are online (I assume)
+                    $output = $player->getOnline();
+                    $output = array_merge($output, $player->getOnlineDetailed($helper->parsePacket85($data)));
                     break;
                 default:
                     Log::info($data);

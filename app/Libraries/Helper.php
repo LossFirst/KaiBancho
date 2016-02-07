@@ -5,11 +5,9 @@ namespace App\Libraries;
 class Helper {
     public function ULeb128($string) {
         if ($string == '') return array(0);
-        $toreturn = array();
         $toreturn = array_merge(
             array(11, strlen($string)),
             unpack('C*', $string));
-        //var_dump($toreturn);
         return $toreturn;
     }
 
@@ -47,5 +45,18 @@ class Helper {
             $randomString .= $characters[rand(0, $charactersLength - 1)];
         }
         return $randomString;
+    }
+
+    public function parsePacket85($data)
+    {
+        $output = array();
+        foreach(array_slice($data, 9) as $item)
+        {
+            if($item != 0)
+            {
+                array_push($output, $item);
+            }
+        }
+        return $output;
     }
 }
