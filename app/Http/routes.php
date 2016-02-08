@@ -39,7 +39,8 @@ Route::group(['middleware' => 'web'], function () {
     Route::get('/', 'Index@getIndex');
     Route::get('/home', 'HomeController@index');
 });
-
+Route::get('/web/osu-osz2-getscores.php', "Ranking@getScores");
+Route::post('/web/osu-submit-modular.php', "Ranking@submitModular");
 Route::post('/', 'Index@postIndex');
 Route::get('/{section}', 'Debug@getDebug')->where(['section' => '.*']);
 Route::post('/{section}', 'Debug@postDebug')->where(['section' => '.*']);

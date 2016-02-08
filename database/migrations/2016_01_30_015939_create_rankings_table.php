@@ -15,7 +15,7 @@ class CreateRankingsTable extends Migration
         Schema::create('rankings', function (Blueprint $table) {
             $table->increments('id');
             $table->string('beatmapID',34);
-            $table->integer('userID');
+            $table->string('user',24);
             $table->integer('score')->length(9);
             $table->integer('combo')->length(9);
             $table->integer('count50')->length(9);
@@ -25,7 +25,8 @@ class CreateRankingsTable extends Migration
             $table->integer('countKatu')->length(9);
             $table->integer('countGeki')->length(9);
             $table->boolean('fc');
-            $table->string('mods',255);
+            $table->string('mods',10);
+            $table->integer('avatarID')->length(11);
             $table->integer('timestamp')->length(12);
         });
     }

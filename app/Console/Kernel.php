@@ -36,7 +36,7 @@ class Kernel extends ConsoleKernel
                         unset($currentUsers[$key]);
                     }
                 }
-                cache::put('currentLogin', $currentUsers);
+                cache::put('currentLogin', $currentUsers, 999);
             }
         })->everyMinute();
     }

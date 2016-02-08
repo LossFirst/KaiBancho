@@ -8,14 +8,18 @@ A framework I am creating for fun and educational purposes, thus the reason I pi
 - [X] Registration
 - [ ] Dashboard (Partially done)
 - [x] User ban
-- [ ] Score listing
-- [ ] Score Submitting
+- [X] Score listing
+- [X] Score Submitting
 - [ ] Multiplayer
 - [X] Chat
 - [X] Private Message
 - [X] Avatar
 - [X] Online user list (Mostly working, needs to clear list after logout)
 - [X] Packet Receiving
+- [ ] Spectating
+- [ ] PP
+- [ ] Global/Country Ranks
+- [ ] Accuracy
 
 
 ## How-to

@@ -13,10 +13,11 @@ class Helper {
 
     public function GetLongBytes($long) {
         $value = $long;
-        $highMap = 0xffffffff00000000;
+        $highMap = 0xfffffff000000000;
         $lowMap = 0x00000000ffffffff;
         $higher = ($value & $highMap) >>32;
         $lower = $value & $lowMap;
+        $packed = pack('NN', $higher, $lower);
         $packed = pack('NN', $higher, $lower);
         return array_reverse(unpack('C*', $packed));
     }
@@ -58,5 +59,17 @@ class Helper {
             }
         }
         return $output;
+    }
+
+    public function scoreString($replayId, $name, $score, $combo, $count50, $count100, $count300, $countMiss, $countKatu, $countGeki, $FC, $mods, $avatarID, $rank, $timestamp)
+    {
+        return sprintf("%d|%s|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|1\n",$replayId, $name, $score, $combo, $count50, $count100, $count300, $countMiss, $countKatu, $countGeki, $FC, $mods, $avatarID, $rank, $timestamp);
+    }
+
+    public function decrypt($text, $iv)
+    {
+        $text = base64_decode($text);
+        $iv = base64_decode($iv);
+        return mcrypt_decrypt(MCRYPT_RIJNDAEL_256, config('bancho.decryptionKey'), $text, MCRYPT_MODE_CBC, $iv);
     }
 }

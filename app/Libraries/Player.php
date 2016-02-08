@@ -4,6 +4,7 @@ namespace App\Libraries;
 
 use Cache;
 use App\User;
+use Log;
 
 class Player {
     public function getAllTokens()
@@ -19,6 +20,7 @@ class Player {
                 }
             }
         }
+        Log::info($output);
         return $output;
     }
 
@@ -142,7 +144,9 @@ class Player {
         {
             $current = Cache::get('currentLogin');
             array_push($current, $token);
-            Cache::put('currentLogin', $current, 60);
+            Cache::put('currentLogin', $current, 999);
+        } else {
+            Cache::put('currentLogin', array($token), 999);
         }
     }
 
