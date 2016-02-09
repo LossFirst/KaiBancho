@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use Illuminate\Encryption\Encrypter;
 use Illuminate\Http\Request;
 
@@ -29,8 +30,7 @@ class Ranking extends Controller
         $output .= "0"; //What is this, its not difficulty, not rating, might as well set to 0
         $output .= "\n";
         $user = User::where('name', $request->query("us"))->first();
-        //$selfrank = Ranking::where('user', $request->query("us"))->where('beatmapID', $request->query("c"));
-        $selfrank = DB::table('osu_scores')->select('id','user_id','score','combo','count50','count100','count300','countMiss','countKatu','countGeki','fc','mods', DB::raw('FIND_IN_SET( score, (SELECT GROUP_CONCAT( score ORDER BY score DESC ) FROM osu_scores )) AS rank'),'created_at')->where('user_id', '=', $user->id)->where('beatmapHash', '=', $request->query("c"))->orderBy('rank','asc')->first();
+        $selfrank = DB::table('osu_scores')->where('user_id', '=', $user->id)->where('beatmapHash', '=', $request->query("c"))->select('id','user_id','score','combo','count50','count100','count300','countMiss','countKatu','countGeki','fc','mods', DB::raw(sprintf("FIND_IN_SET( score, (SELECT GROUP_CONCAT( score ORDER BY score DESC ) FROM osu_scores WHERE beatmapHash = '%s' )) AS rank", $user->id, $request->query("c"))),'created_at')->orderBy('rank','asc')->first();
         if(!is_null($selfrank))
         {
             $output .= $helper->scoreString($selfrank->id, $user->name, $selfrank->score, $selfrank->combo, $selfrank->count50, $selfrank->count100, $selfrank->count300, $selfrank->countMiss, $selfrank->countKatu, $selfrank->countGeki, $selfrank->fc, $selfrank->mods, $selfrank->user_id, $selfrank->rank, strtotime($selfrank->created_at));
@@ -39,7 +39,7 @@ class Ranking extends Controller
         {
             $output .= "\n";
         }
-        $ranking = DB::table('osu_scores')->select('id','user_id','score','combo','count50','count100','count300','countMiss','countKatu','countGeki','fc','mods', DB::raw('FIND_IN_SET( score, (SELECT GROUP_CONCAT( score ORDER BY score DESC ) FROM osu_scores )) AS rank'),'created_at')->where('beatmapHash', '=', $request->query("c"))->orderBy('rank','asc')->limit(50)->get();
+        $ranking = DB::table('osu_scores')->select('id','user_id','score','combo','count50','count100','count300','countMiss','countKatu','countGeki','fc','mods', DB::raw(sprintf("FIND_IN_SET( score, (SELECT GROUP_CONCAT( score ORDER BY score DESC ) FROM osu_scores WHERE beatmapHash = '%s' )) AS rank", $request->query("c"))),'created_at')->where('beatmapHash', '=', $request->query("c"))->orderBy('rank','asc')->limit(50)->get();
         foreach ($ranking as $rank)
         {
             $player = User::find($rank->user_id);
@@ -70,9 +70,10 @@ class Ranking extends Controller
                 'fc' => $score[11],
                 'mods' => $score[13],
                 'pass' => $passed,
-                'checksum' => $score[16]
+                'checksum' => $score[16],
+                'created_at' => Carbon::now()
             ]);
-            if($score[9] > $user->OsuUserStats->max_combo)
+            if($score[10] > $user->OsuUserStats->max_combo)
             {
                 $user->OsuUserStats->max_combo = $score[10];
             }
