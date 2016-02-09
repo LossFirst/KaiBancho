@@ -52,7 +52,6 @@ class Ranking extends Controller
     {
         $helper = new Helper();
         $score = explode(":", $helper->decrypt($request->input('score'), $request->input('iv')));
-        Log::info($score);
         $user = User::where('name', $score[1])->first();
         $passed = $score[14] === 'True' ? true: false;
         if($passed) {
@@ -73,7 +72,7 @@ class Ranking extends Controller
                 'pass' => $passed,
                 'checksum' => $score[16]
             ]);
-            if($user->OsuUserStats->max_combo > $score[9])
+            if($score[9] > $user->OsuUserStats->max_combo)
             {
                 $user->OsuUserStats->max_combo = $score[9];
             }

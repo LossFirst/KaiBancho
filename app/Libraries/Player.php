@@ -5,6 +5,7 @@ namespace App\Libraries;
 use Cache;
 use App\User;
 use Log;
+use DB;
 
 class Player {
     public function getAllTokens()
@@ -97,8 +98,18 @@ class Player {
             'playerRank' => 0,
             'longitude' => 0,
             'latitude' => 0,
-            'globalRank' => 0,
+            'globalRank' => $this->getUserRank($player),
         );
+    }
+
+    public function getUserRank($player)
+    {
+        $rank = DB::table('osu_user_stats')
+            ->select(DB::raw('FIND_IN_SET( ranked_score, (SELECT GROUP_CONCAT( ranked_score ORDER BY ranked_score DESC ) FROM osu_user_stats )) AS rank'))
+            ->where('user_id', '=', $player->id)
+            ->orderBy('rank','asc')
+            ->first();
+        return $rank->rank;
     }
 
     public function getDataDetailed($player)
@@ -111,11 +122,11 @@ class Player {
             'mods' => 0,		//int
             'playmode' => 0,	//byte
             'int0' => 0,		//int
-            'score' => $player->OsuUserStats->total_score,			//long 	score
+            'score' => $player->OsuUserStats->ranked_score,			//long 	score
             'accuracy' => $this->getAccuracy($player),	//float accuracy
             'playcount' => $player->OsuUserStats->playcount,			//int playcount
             'experience' => 0,			//long 	experience
-            'int1' => 0,	//int 	global rank?
+            'int1' => $this->getUserRank($player),	//int 	global rank?
             'pp' => 0,			//short	pp 				if set, will use?
         );
     }
