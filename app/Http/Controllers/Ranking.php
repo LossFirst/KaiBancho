@@ -21,7 +21,7 @@ class Ranking extends Controller
         $output .= "false|"; //Need more info
         $output .= "1|"; //Beatmap ID (You'll need to have a full database of Beatmap Set ID's with Beatmap ID's)
         $output .= sprintf("%s|",$request->query("i")); //Beatmap Set ID
-        $output .= sprintf("%d", DB::table('rankings')->where('beatmapID', '=', $request->query("c"))->count()); //How many ranks are in the table for the ID Difficulty Hash
+        $output .= sprintf("%d", DB::table('osu_scores')->where('beatmapHash', '=', $request->query("c"))->count()); //How many ranks are in the table for the ID Difficulty Hash
         $output .= "\n";
         $output .= "0"; //Something, idk
         $output .= "\n";
@@ -30,7 +30,7 @@ class Ranking extends Controller
         $output .= "\n";
         $user = User::where('name', $request->query("us"))->first();
         //$selfrank = Ranking::where('user', $request->query("us"))->where('beatmapID', $request->query("c"));
-        $selfrank = DB::table('osu_scores')->select('id','user_id','score','combo','count50','count100','count300','countMiss','countKatu','countGeki','fc','mods', DB::raw('FIND_IN_SET( score, (SELECT GROUP_CONCAT( score ORDER BY score DESC ) FROM rankings )) AS rank'),'created_at')->where('user_id', '=', $user->id)->where('beatmapHash', '=', $request->query("c"))->orderBy('rank','asc')->first();
+        $selfrank = DB::table('osu_scores')->select('id','user_id','score','combo','count50','count100','count300','countMiss','countKatu','countGeki','fc','mods', DB::raw('FIND_IN_SET( score, (SELECT GROUP_CONCAT( score ORDER BY score DESC ) FROM osu_scores )) AS rank'),'created_at')->where('user_id', '=', $user->id)->where('beatmapHash', '=', $request->query("c"))->orderBy('rank','asc')->first();
         if(!is_null($selfrank))
         {
             $output .= $helper->scoreString($selfrank->id, $user->name, $selfrank->score, $selfrank->combo, $selfrank->count50, $selfrank->count100, $selfrank->count300, $selfrank->countMiss, $selfrank->countKatu, $selfrank->countGeki, $selfrank->fc, $selfrank->mods, $selfrank->user_id, $selfrank->rank, strtotime($selfrank->created_at));
@@ -39,7 +39,7 @@ class Ranking extends Controller
         {
             $output .= "\n";
         }
-        $ranking = DB::table('osu_scores')->select('id','user_id','score','combo','count50','count100','count300','countMiss','countKatu','countGeki','fc','mods', DB::raw('FIND_IN_SET( score, (SELECT GROUP_CONCAT( score ORDER BY score DESC ) FROM rankings )) AS rank'),'created_at')->where('beatmapHash', '=', $request->query("c"))->orderBy('rank','asc')->limit(50)->get();
+        $ranking = DB::table('osu_scores')->select('id','user_id','score','combo','count50','count100','count300','countMiss','countKatu','countGeki','fc','mods', DB::raw('FIND_IN_SET( score, (SELECT GROUP_CONCAT( score ORDER BY score DESC ) FROM osu_scores )) AS rank'),'created_at')->where('beatmapHash', '=', $request->query("c"))->orderBy('rank','asc')->limit(50)->get();
         foreach ($ranking as $rank)
         {
             $player = User::find($rank->user_id);
