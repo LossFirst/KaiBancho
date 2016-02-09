@@ -38,7 +38,10 @@ class Player {
         $output = array();
         foreach($tokens as $token)
         {
-            array_push($output, $this->getIDfromToken($token));
+            $id = $this->getIDfromToken($token);
+            if($id != -1) {
+                array_push($output, $this->getIDfromToken($token));
+            }
         }
         return $output;
     }
@@ -61,7 +64,7 @@ class Player {
         $output = array();
         foreach($ids as $id) {
             $user = $this->getDatafromID($id);
-            $output = array_merge($output, $packet->create(83,$this->getData($user)));
+            $output = array_merge($output, $packet->create(83, $this->getData($user)));
         }
         return $output;
     }
@@ -69,13 +72,8 @@ class Player {
     public function getDatafromID($id)
     {
         if($id != -1) {
-            if (Cache::tags(['userData'])->has($id)) {
-                return Cache::tags(['userData'])->get($id);
-            } else {
-                $user = User::findOrFail($id);
-                Cache::tags(['userData'])->put($id, $user);
-                return $user;
-            }
+            $user = User::find($id);
+            return $user;
         }
         return false;
     }
@@ -113,12 +111,12 @@ class Player {
             'mods' => 0,		//int
             'playmode' => 0,	//byte
             'int0' => 0,		//int
-            'score' => $player->total_score,			//long 	score
-            'accuracy' => $player->accuracy,	//float accuracy
-            'playcount' => 0,			//int playcount
+            'score' => $player->OsuUserStats->total_score,			//long 	score
+            'accuracy' => $this->getAccuracy($player),	//float accuracy
+            'playcount' => $player->OsuUserStats->playcount,			//int playcount
             'experience' => 0,			//long 	experience
             'int1' => 0,	//int 	global rank?
-            'pp' => $player->pp_raw,			//short	pp 				if set, will use?
+            'pp' => 0,			//short	pp 				if set, will use?
         );
     }
 
@@ -139,20 +137,26 @@ class Player {
     public function setToken($token, $user)
     {
         Cache::tags(['userToken'])->put($token, $user->id, 1);
-        Cache::tags(['userData'])->put($user->id, $user, 60);
-        if(Cache::has('currentLogin'))
-        {
+        if(Cache::has('currentLogin')) {
             $current = Cache::get('currentLogin');
             array_push($current, $token);
             Cache::put('currentLogin', $current, 999);
-        } else {
-            Cache::put('currentLogin', array($token), 999);
         }
     }
 
-    public function updateToken($token, $user)
+    public function updateToken($token, $userID)
     {
-        Cache::tags(['userToken'])->put($token, $user->id, 1);
-        Cache::tags(['userData'])->put($user->id, $user, 60);
+        Cache::tags(['userToken'])->put($token, $userID, 1);
+    }
+
+    public function getAccuracy($player)
+    {
+        $totalHits = ($player->OsuUserStats->count50 + $player->OsuUserStats->count100 + $player->OsuUserStats->count300 + $player->OsuUserStats->countmiss) * 300;
+        $hits = $player->OsuUserStats->count50 * 50 + $player->OsuUserStats->count100 * 100 + $player->OsuUserStats->count300 * 300;
+        if($hits && $totalHits != 0) {
+            return $hits / $totalHits;
+        } else {
+            return 0;
+        }
     }
 }

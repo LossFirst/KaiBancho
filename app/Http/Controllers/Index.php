@@ -32,10 +32,10 @@ class Index extends Controller
         }
         $player = new Player();
         $packet = new Packet();
-        $user = $player->getDatafromToken($osutoken);
-        $player->updateToken($osutoken, $user);
+        $userID = $player->getIDfromToken($osutoken);
+        $player->updateToken($osutoken, $userID);
         $body = $request->getContent();
-        $output = $packet->check(unpack('C*', $body), $user, $osutoken);
+        $output = $packet->check(unpack('C*', $body), $userID, $osutoken);
         return $output;
     }
 

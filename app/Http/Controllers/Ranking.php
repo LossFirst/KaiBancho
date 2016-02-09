@@ -9,11 +9,8 @@ use App\Http\Requests;
 use App\Http\Controllers\Controller;
 use Log;
 use DB;
-use Response;
-use App\Libraries\Packet as Packet;
 use App\Libraries\Helper as Helper;
-use App\Libraries\Player as Player;
-use Crypt;
+use App\User;
 
 class Ranking extends Controller
 {
@@ -31,20 +28,22 @@ class Ranking extends Controller
         $output .= sprintf("[bold:0,size:20]%s|\n",str_replace(".osu","",$request->query("f"))); //Sets text size and name for viewing
         $output .= "0"; //What is this, its not difficulty, not rating, might as well set to 0
         $output .= "\n";
+        $user = User::where('name', $request->query("us"))->first();
         //$selfrank = Ranking::where('user', $request->query("us"))->where('beatmapID', $request->query("c"));
-        $selfrank = DB::table('rankings')->select('id','user','score','combo','count50','count100','count300','countMiss','countKatu','countGeki','fc','mods','avatarID', DB::raw('FIND_IN_SET( score, (SELECT GROUP_CONCAT( score ORDER BY score DESC ) FROM rankings )) AS rank'),'timestamp')->where('user', '=', $request->query("us"))->where('beatmapID', '=', $request->query("c"))->orderBy('rank','asc')->first();
+        $selfrank = DB::table('osu_scores')->select('id','user_id','score','combo','count50','count100','count300','countMiss','countKatu','countGeki','fc','mods', DB::raw('FIND_IN_SET( score, (SELECT GROUP_CONCAT( score ORDER BY score DESC ) FROM rankings )) AS rank'),'created_at')->where('user_id', '=', $user->id)->where('beatmapHash', '=', $request->query("c"))->orderBy('rank','asc')->first();
         if(!is_null($selfrank))
         {
-            $output .= $helper->scoreString($selfrank->id, $selfrank->user, $selfrank->score, $selfrank->combo, $selfrank->count50, $selfrank->count100, $selfrank->count300, $selfrank->countMiss, $selfrank->countKatu, $selfrank->countGeki, $selfrank->fc, $selfrank->mods, $selfrank->avatarID, $selfrank->rank, $selfrank->timestamp);
+            $output .= $helper->scoreString($selfrank->id, $user->name, $selfrank->score, $selfrank->combo, $selfrank->count50, $selfrank->count100, $selfrank->count300, $selfrank->countMiss, $selfrank->countKatu, $selfrank->countGeki, $selfrank->fc, $selfrank->mods, $selfrank->user_id, $selfrank->rank, strtotime($selfrank->created_at));
         }
         else
         {
             $output .= "\n";
         }
-        $ranking = DB::table('rankings')->select('id','user','score','combo','count50','count100','count300','countMiss','countKatu','countGeki','fc','mods','avatarID', DB::raw('FIND_IN_SET( score, (SELECT GROUP_CONCAT( score ORDER BY score DESC ) FROM rankings )) AS rank'),'timestamp')->where('beatmapID', '=', $request->query("c"))->orderBy('rank','asc')->limit(50)->get();
+        $ranking = DB::table('osu_scores')->select('id','user_id','score','combo','count50','count100','count300','countMiss','countKatu','countGeki','fc','mods', DB::raw('FIND_IN_SET( score, (SELECT GROUP_CONCAT( score ORDER BY score DESC ) FROM rankings )) AS rank'),'created_at')->where('beatmapHash', '=', $request->query("c"))->orderBy('rank','asc')->limit(50)->get();
         foreach ($ranking as $rank)
         {
-            $output .= $helper->scoreString($rank->id, $rank->user, $rank->score, $rank->combo, $rank->count50, $rank->count100, $rank->count300, $rank->countMiss, $rank->countKatu, $rank->countGeki, $rank->fc, $rank->mods, $rank->avatarID, $rank->rank, $rank->timestamp);
+            $player = User::find($rank->user_id);
+            $output .= $helper->scoreString($rank->id, $player->name, $rank->score, $rank->combo, $rank->count50, $rank->count100, $rank->count300, $rank->countMiss, $rank->countKatu, $rank->countGeki, $rank->fc, $rank->mods, $rank->user_id, $rank->rank, strtotime($rank->created_at));
         }
         return $output;
     }
@@ -54,12 +53,14 @@ class Ranking extends Controller
         $helper = new Helper();
         $score = explode(":", $helper->decrypt($request->input('score'), $request->input('iv')));
         Log::info($score);
-        $player = DB::table('users')->select('id', 'total_score')->where('name', '=', $score[1])->first();
-        if($score[14] == "True") {
-            DB::table('rankings')->insert([
-                'beatmapID' => $score[0],
-                'user' => $score[1],
+        $user = User::where('name', $score[1])->first();
+        $passed = $score[14] === 'True' ? true: false;
+        if($passed) {
+            DB::table('osu_scores')->insert([
+                'beatmapHash' => $score[0],
+                'user_id' => $user->id,
                 'score' => $score[9],
+                'rank' => $score[12],
                 'combo' => $score[10],
                 'count50' => $score[5],
                 'count100' => $score[4],
@@ -69,11 +70,22 @@ class Ranking extends Controller
                 'countGeki' => $score[6],
                 'fc' => $score[11],
                 'mods' => $score[13],
-                'avatarID' => $player->id,
-                'timestamp' => $score[17]
+                'pass' => $passed,
+                'checksum' => $score[16]
             ]);
+            if($user->OsuUserStats->max_combo > $score[9])
+            {
+                $user->OsuUserStats->max_combo = $score[9];
+            }
+            $user->OsuUserStats->count300 = $user->OsuUserStats->count300 + $score[3] + $score[6];
+            $user->OsuUserStats->count100 = $user->OsuUserStats->count100 + $score[4] + $score[7];
+            $user->OsuUserStats->count50 = $user->OsuUserStats->count50 + $score[5];
+            $user->OsuUserStats->countMiss = $user->OsuUserStats->countMiss + $score[8];
+            $user->OsuUserStats->ranked_score = $user->OsuUserStats->ranked_score + $score[9];
+            $user->OsuUserStats->playcount = $user->OsuUserStats->playcount + 1;
         }
-        DB::table('users')->where('id', '=', $player->id)->update(['total_score' => $player->total_score + $score[9]]);
+        $user->OsuUserStats->total_score = $user->OsuUserStats->total_score + $score[9];
+        $user->OsuUserStats->save();
         return "";
     }
 }

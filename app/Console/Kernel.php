@@ -29,12 +29,14 @@ class Kernel extends ConsoleKernel
             if(Cache::has('currentLogin'))
             {
                 $currentUsers = cache::get('currentLogin');
-                foreach($currentUsers as $key => $token)
-                {
-                    if(!cache::has($token))
-                    {
-                        unset($currentUsers[$key]);
+                if(!is_null($currentUsers)) {
+                    foreach ($currentUsers as $key => $token) {
+                        if (!cache::has($token)) {
+                            unset($currentUsers[$key]);
+                        }
                     }
+                } else {
+                    $currentUsers = array();
                 }
                 cache::put('currentLogin', $currentUsers, 999);
             }

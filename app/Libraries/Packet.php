@@ -99,68 +99,70 @@ class Packet {
         );
     }
     
-    public function check($data, $user, $osutoken)
+    public function check($data, $userID, $osutoken)
     {
         $output = array();
         if (is_array($data)) {
             $player = new Player();
             $helper = new Helper();
-            switch ($data[1]) {
-                case 0: //A more indepth packet
-                    switch ($data[4]) {
-                        default:
-                            Log::info($data);
-                            Log::info(sprintf("PACKET: %s", implode(array_map("chr", $data))));
-                            break;
-                    }
-                    break;
-                case 1: //Chat message
-                    $message = new Message();
-                    $output = $message->sendToChannel($data, $user);
-                    break;
-                case 2: //Logout packet (Only gets called if you Alt+F4)
-                    Cache::forget($osutoken);
-                    break;
-                case 3: //Initial fetch for local player OR could be the data for getting all players (Would make even more sense)
-                    $bot = (object)array('id' => 2, 'name' => "KaiBanchoo", 'country' => 2);
-                    $output = array_merge(
-                        $this->create(83, $player->getData($bot)));
-                    break;
-                case 4: //TODO: Default update
-                    if(Cache::tags(['userChat'])->has($user->id)) {
-                        $output = array_merge($output, Cache::tags(['userChat'])->get($user->id));
-                        Cache::tags(['userChat'])->forget($user->id);
-                    }
-                    break;
-                case 16: //TODO: Spectating [$data[8] = targeted user]
-                    break;
-                case 25: //Private Message
-                    $message = new Message();
-                    $output = $message->sendToPlayer($data, $user);
-                    break;
-                case 64: //Remove channel ($data[10]+ = Channel Name)
-                    break;
-                case 68: //Join channel
-                    if (array_slice($data, -4)[1] == 35) {
-                        $output = array_merge(
-                            $this->create(64, implode(array_map("chr", array_slice($data, -4))))
-                        );
-                    }
-                    break;
-                case 73: //TODO: Add friend [$data[8] = targeted user]
-                case 74: //TODO: Remove friend [$data[8] = targeted user]
-                    break;
-                case 79: //Gets all users online
-                    //$output = $player->getOnline();
-                    break;
-                case 85: //Updates all users, also checks if they are online (I assume)
-                    $output = $player->getOnline();
-                    $output = array_merge($output, $player->getOnlineDetailed($helper->parsePacket85($data)));
-                    break;
-                default:
-                    Log::info($data);
-                    Log::info(sprintf("PACKET: %s", implode(array_map("chr", $data))));
-                    break;
+            if ($data[1] != 0) {
+                switch ($data[1]) {
+                    case 1: //Chat message
+                        $message = new Message();
+                        $output = $message->sendToChannel($data, $player->getDatafromID($userID));
+                        break;
+                    case 2: //Logout packet (Only gets called if you Alt+F4)
+                        Cache::forget($osutoken);
+                        break;
+                    case 3: //Initial fetch for local player OR could be the data for getting all players (Would make even more sense)
+                        $bot = (object)array('id' => 2, 'name' => "KaiBanchoo", 'country' => 2);
+                        $output = array_merge($this->create(83, $player->getData($bot)));
+                        break;
+                    case 4: //TODO: Default chat update
+                        if (Cache::tags(['userChat'])->has($userID)) {
+                            $output = array_merge($output, Cache::tags(['userChat'])->pull($userID));
+                        }
+                        break;
+                    case 16: //TODO: Spectating [$data[8] = targeted user]
+                        break;
+                    case 25: //Private Message
+                        $message = new Message();
+                        $output = $message->sendToPlayer($data, $player->getDatafromID($userID));
+                        break;
+                    case 64: //Remove channel ($data[10]+ = Channel Name)
+                        break;
+                    case 68: //Join channel
+                        if (array_slice($data, -4)[1] == 35) {
+                            $output = array_merge(
+                                $this->create(64, implode(array_map("chr", array_slice($data, -4))))
+                            );
+                        }
+                        break;
+                    case 73: //TODO: Add friend [$data[8] = targeted user]
+                    case 74: //TODO: Remove friend [$data[8] = targeted user]
+                        break;
+                    case 79: //Gets all users online
+                        //$output = $player->getOnline();
+                        break;
+                    case 85: //Updates all users, also checks if they are online (I assume)
+                        $output = $player->getOnline();
+                        $output = array_merge($output, $player->getOnlineDetailed($helper->parsePacket85($data)));
+                        break;
+                    default:
+                        Log::info($data);
+                        Log::info(sprintf("PACKET: %s", implode(array_map("chr", $data))));
+                        break;
+                }
+            } else {
+                switch ($data[4]) {
+                    case 14:
+                        $output = $this->create(11 ,$player->getDataDetailed($player->getDatafromID($userID)));
+                        break;
+                    default:
+                        Log::info($data);
+                        Log::info(sprintf("PACKET: %s", implode(array_map("chr", $data))));
+                        break;
+                }
             }
         }
         return implode(array_map("chr", $output));

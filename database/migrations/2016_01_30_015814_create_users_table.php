@@ -13,6 +13,7 @@ class CreateUsersTable extends Migration
     public function up()
     {
         Schema::create('users', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->increments('id');
             $table->string('name')->unique();
             $table->string('email')->unique();
@@ -20,12 +21,9 @@ class CreateUsersTable extends Migration
             $table->rememberToken();
             $table->integer('usergroup')->length(2);
             $table->integer('country')->length(4);
-            $table->integer('pp_raw')->length(10);
-            $table->integer('total_score');
-            $table->integer('playcount');
-            $table->float('accuracy');
             $table->integer('bantime')->length(11);
             $table->text('avatar');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

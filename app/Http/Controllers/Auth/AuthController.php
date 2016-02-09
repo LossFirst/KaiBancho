@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\OsuUserStats;
 use App\User;
 use Validator;
 use App\Http\Controllers\Controller;
@@ -64,18 +65,16 @@ class AuthController extends Controller
      */
     protected function create(array $data)
     {
-        return User::create([
+        $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => bcrypt(md5($data['password'])),
-            'pp_raw' => 0,
-            'total_score' => 0,
             'banned' => 0,
-            'accuracy' => 0,
             'country' => 0,
-            'playcount' => 0,
             'usergroup' => 0,
             'avatar' => ""
         ]);
+        $user->OsuUserStats()->save(new OsuUserStats(array('level' => 0)));
+        return $user;
     }
 }

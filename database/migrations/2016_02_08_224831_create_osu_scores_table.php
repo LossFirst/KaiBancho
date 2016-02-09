@@ -3,7 +3,7 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateRankingsTable extends Migration
+class CreateOsuScoresTable extends Migration
 {
     /**
      * Run the migrations.
@@ -12,11 +12,14 @@ class CreateRankingsTable extends Migration
      */
     public function up()
     {
-        Schema::create('rankings', function (Blueprint $table) {
+        Schema::create('osu_scores', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->increments('id');
-            $table->string('beatmapID',34);
-            $table->string('user',24);
-            $table->integer('score')->length(9);
+            $table->string('beatmapHash', 34);
+            $table->integer('user_id')->unsigned();
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->integer('score');
+            $table->enum('rank', ['0','A','B','C','D','S','SH','X','XH','F'])->default('F');
             $table->integer('combo')->length(9);
             $table->integer('count50')->length(9);
             $table->integer('count100')->length(9);
@@ -26,8 +29,9 @@ class CreateRankingsTable extends Migration
             $table->integer('countGeki')->length(9);
             $table->boolean('fc');
             $table->string('mods',10);
-            $table->integer('avatarID')->length(11);
-            $table->integer('timestamp')->length(12);
+            $table->boolean('pass');
+            $table->integer('checksum')->length(16); //I think I got this?
+            $table->timestamps();
         });
     }
 
@@ -38,6 +42,6 @@ class CreateRankingsTable extends Migration
      */
     public function down()
     {
-        Schema::drop('rankings');
+        Schema::drop('osu_scores');
     }
 }
