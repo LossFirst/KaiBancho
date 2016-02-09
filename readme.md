@@ -18,8 +18,9 @@ A framework I am creating for fun and educational purposes, thus the reason I pi
 - [X] Packet Receiving
 - [ ] Spectating
 - [ ] PP
-- [ ] Global/Country Ranks
-- [ ] Accuracy
+- [X] Global Ranks
+- [ ] Country Ranks
+- [X] Accuracy
 
 
 ## How-to
