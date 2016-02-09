@@ -74,7 +74,7 @@ class Ranking extends Controller
             ]);
             if($score[9] > $user->OsuUserStats->max_combo)
             {
-                $user->OsuUserStats->max_combo = $score[9];
+                $user->OsuUserStats->max_combo = $score[10];
             }
             $user->OsuUserStats->count300 = $user->OsuUserStats->count300 + $score[3] + $score[6];
             $user->OsuUserStats->count100 = $user->OsuUserStats->count100 + $score[4] + $score[7];
