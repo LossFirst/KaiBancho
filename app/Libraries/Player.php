@@ -2,7 +2,6 @@
 
 namespace App\Libraries;
 
-use Cache;
 use App\User;
 use Log;
 use DB;

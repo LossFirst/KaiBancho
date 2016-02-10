@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\OsuBeatmaps;
 use Carbon\Carbon;
 use Illuminate\Encryption\Encrypter;
 use Illuminate\Http\Request;
@@ -17,16 +18,50 @@ class Ranking extends Controller
 {
     public function getScores(Request $request)
     {
+        log::info($request->all());
+        try {
+            OsuBeatmaps::where('checksum', $request->query("c"))->firstOrFail();
+        } catch(\Exception $e) {
+            $client = new \GuzzleHttp\Client();
+            $res = $client->request('GET', 'https://osu.ppy.sh/api/get_beatmaps', [
+                'query' => ['k' => config('bancho.osuAPIKey'), 'h' => sprintf("%s",$request->query("c"))]
+            ]);
+            $data = json_decode($res->getBody());
+            if(!empty($data)) {
+                OsuBeatmaps::create([
+                    'beatmap_id' => $data[0]->beatmap_id,
+                    'beatmapset_id' => $data[0]->beatmapset_id,
+                    'title' => $data[0]->title,
+                    'creator' => $data[0]->creator,
+                    'bpm' => $data[0]->bpm,
+                    'checksum' => $data[0]->file_md5,
+                    'version' => $data[0]->version,
+                    'total_length' => $data[0]->total_length,
+                    'hit_length' => $data[0]->hit_length,
+                    'countTotal' => $data[0]->max_combo,
+                    'diff_drain' => $data[0]->diff_drain,
+                    'diff_size' => $data[0]->diff_size,
+                    'diff_overall' => $data[0]->diff_overall,
+                    'diff_approach' => $data[0]->diff_approach,
+                    'playmode' => $data[0]->mode,
+                    'approved' => $data[0]->approved,
+                    'difficultyrating' => $data[0]->difficultyrating,
+                    'playcount' => 0,
+                    'passcount' => 0
+                ]);
+            }
+        }
+        $beatmap = OsuBeatmaps::where('checksum', $request->query("c"))->first();
         $helper = new Helper();
         $output = "2|"; //2 = Approved, 0 = Unapproved
         $output .= "false|"; //Need more info
-        $output .= "1|"; //Beatmap ID (You'll need to have a full database of Beatmap Set ID's with Beatmap ID's)
-        $output .= sprintf("%s|",$request->query("i")); //Beatmap Set ID
+        $output .= sprintf("%d|", (isset($beatmap)? $beatmap->beatmapset_id : 0)); //Beatmap Set ID
+        $output .= sprintf("%s|", (isset($beatmap)? $beatmap->beatmap_id : $request->query("i"))); //Beatmap ID
         $output .= sprintf("%d", DB::table('osu_scores')->where('beatmapHash', '=', $request->query("c"))->count()); //How many ranks are in the table for the ID Difficulty Hash
         $output .= "\n";
         $output .= "0"; //Something, idk
         $output .= "\n";
-        $output .= sprintf("[bold:0,size:20]%s|\n",str_replace(".osu","",$request->query("f"))); //Sets text size and name for viewing
+        $output .= sprintf("[bold:0,size:20]%s|\n", (isset($beatmap)? $beatmap->title : str_replace(".osu","",$request->query("f")))); //Sets text size and name for viewing
         $output .= "0"; //What is this, its not difficulty, not rating, might as well set to 0
         $output .= "\n";
         $user = User::where('name', $request->query("us"))->first();

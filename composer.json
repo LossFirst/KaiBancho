@@ -13,7 +13,8 @@
         "torann/geoip": "0.2.2",
         "laravelcollective/html": "v5.2.4",
         "cviebrock/image-validator": "2.0.0",
-        "predis/predis": "v1.0.3"
+        "predis/predis": "v1.0.3",
+        "guzzlehttp/guzzle": "6.1.1"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",
