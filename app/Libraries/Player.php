@@ -17,8 +17,12 @@ class Player {
         return $allKeys;
     }
 
-    public function getIDfromToken($token)
+    public function getIDfromToken($token, $format = false)
     {
+        if($format)
+        {
+            $token = sprintf("CurrentlyLoggedIn:%s", $token);
+        }
         $redis = Redis::connection();
 
         return $redis->get($token);
@@ -92,12 +96,15 @@ class Player {
 
     public function getUserRank($player)
     {
-        $rank = DB::table('osu_user_stats')
-            ->select(DB::raw('FIND_IN_SET( ranked_score, (SELECT GROUP_CONCAT( ranked_score ORDER BY ranked_score DESC ) FROM osu_user_stats )) AS rank'))
-            ->where('user_id', '=', $player->id)
-            ->orderBy('rank','asc')
-            ->first();
-        return $rank->rank;
+        if($player->OsuUserStats->ranked_score > 0) {
+            $rank = DB::table('osu_user_stats')
+                ->select(DB::raw('FIND_IN_SET( ranked_score, (SELECT GROUP_CONCAT( ranked_score ORDER BY ranked_score DESC ) FROM osu_user_stats )) AS rank'))
+                ->where('user_id', '=', $player->id)
+                ->orderBy('rank', 'asc')
+                ->first();
+            return $rank->rank;
+        }
+        return 0;
     }
 
     public function getDataDetailed($player)
@@ -144,6 +151,12 @@ class Player {
     {
         $redis = Redis::connection();
         $redis->expire(sprintf("CurrentlyLoggedIn:%s", $token), 30);
+    }
+
+    public function expireToken($token)
+    {
+        $redis = Redis::connection();
+        $redis->del(sprintf("CurrentlyLoggedIn:%s", $token));
     }
 
     public function getAccuracy($player)

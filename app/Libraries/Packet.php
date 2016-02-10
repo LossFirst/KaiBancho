@@ -112,7 +112,7 @@ class Packet {
                         $message->SendMessage($player->getDatafromID($userID), $data);
                         break;
                     case 2: //Logout packet (Only gets called if you Alt+F4)
-                        Cache::forget($osutoken);
+                        $player->expireToken($osutoken);
                         break;
                     case 3: //Initial fetch for local player OR could be the data for getting all players (Would make even more sense)
                         $bot = $player->getDatafromID(2);
