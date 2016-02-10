@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Libraries\Player;
 use App\User;
 use Illuminate\Http\Request;
 
@@ -18,6 +19,7 @@ class userProfile extends Controller
         if(count($user) >= 1) {
             $updated = new Carbon($user->updated_at);
             $now = Carbon::now();
+            $player = new Player();
             if($updated->diff($now)->m < 1) {
                 $lastOnline = "Last seen less than a minute ago";
             } elseif($updated->diff($now)->h < 1) {
@@ -33,7 +35,7 @@ class userProfile extends Controller
             } else {
                 $lastOnline = ($updated->diffInYears($now) > 1) ? sprintf("Last seen %d years ago",$updated->diffInYears($now)) : sprintf("Last seen %d year ago",$updated->diffInYears($now));
             }
-            return view('dashboard.userProfile', ['user' => $user, 'lastOnline' => $lastOnline]);
+            return view('dashboard.userProfile', ['user' => $user, 'lastOnline' => $lastOnline, 'rank' => $player->getUserRank($user), 'accuracy' => $player->getAccuracy($user)]);
         } else {
             return view('dashboard.userProfile');
         }
