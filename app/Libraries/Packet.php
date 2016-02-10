@@ -108,26 +108,25 @@ class Packet {
             if ($data[1] != 0) {
                 switch ($data[1]) {
                     case 1: //Chat message
-                        $message = new Message();
-                        $output = $message->sendToChannel($data, $player->getDatafromID($userID));
+                        $message = new RedisMessage();
+                        $message->SendMessage($player->getDatafromID($userID), $data);
                         break;
                     case 2: //Logout packet (Only gets called if you Alt+F4)
                         Cache::forget($osutoken);
                         break;
                     case 3: //Initial fetch for local player OR could be the data for getting all players (Would make even more sense)
-                        $bot = (object)array('id' => 2, 'name' => "KaiBanchoo", 'country' => 2);
+                        $bot = $player->getDatafromID(2);
                         $output = array_merge($this->create(83, $player->getData($bot)));
                         break;
                     case 4: //TODO: Default chat update
-                        if (Cache::tags(['userChat'])->has($userID)) {
-                            $output = array_merge($output, Cache::tags(['userChat'])->pull($userID));
-                        }
+                        $message = new RedisMessage();
+                        $output = $message->GetMessage($userID);
                         break;
                     case 16: //TODO: Spectating [$data[8] = targeted user]
                         break;
                     case 25: //Private Message
-                        $message = new Message();
-                        $output = $message->sendToPlayer($data, $player->getDatafromID($userID));
+                        $message = new RedisMessage();
+                        $message->SendMessage($player->getDatafromID($userID), $data);
                         break;
                     case 64: //Remove channel ($data[10]+ = Channel Name)
                         break;

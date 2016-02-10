@@ -6,32 +6,22 @@ use Cache;
 use App\User;
 use Log;
 use DB;
+use Redis;
 
 class Player {
     public function getAllTokens()
     {
-        $output = array();
-        if(Cache::has('currentLogin')) {
-            $currentUsers = Cache::get('currentLogin');
-            foreach($currentUsers as $token)
-            {
-                if(cache::tags(['userToken'])->has($token))
-                {
-                    array_push($output, $token);
-                }
-            }
-        }
-        Log::info($output);
-        return $output;
+        $redis = Redis::connection();
+        $allKeys = $redis->keys('CurrentlyLoggedIn:*');
+        Log::info($allKeys);
+        return $allKeys;
     }
 
     public function getIDfromToken($token)
     {
-        if(Cache::tags(['userToken'])->has($token))
-        {
-            return Cache::tags(['userToken'])->get($token);
-        }
-        return -1;
+        $redis = Redis::connection();
+
+        return $redis->get($token);
     }
 
     public function getAllIDs($tokens)
@@ -39,10 +29,7 @@ class Player {
         $output = array();
         foreach($tokens as $token)
         {
-            $id = $this->getIDfromToken($token);
-            if($id != -1) {
-                array_push($output, $this->getIDfromToken($token));
-            }
+            array_push($output, $this->getIDfromToken($token));
         }
         return $output;
     }
@@ -66,6 +53,7 @@ class Player {
         foreach($ids as $id) {
             $user = $this->getDatafromID($id);
             $output = array_merge($output, $packet->create(83, $this->getData($user)));
+            $output = array_merge($output, $packet->create(11, $this->getDataDetailed($user)));
         }
         return $output;
     }
@@ -147,17 +135,15 @@ class Player {
 
     public function setToken($token, $user)
     {
-        Cache::tags(['userToken'])->put($token, $user->id, 1);
-        if(Cache::has('currentLogin')) {
-            $current = Cache::get('currentLogin');
-            array_push($current, $token);
-            Cache::put('currentLogin', $current, 999);
-        }
+        $redis = Redis::connection();
+        $redis->set(sprintf("CurrentlyLoggedIn:%s", $token), $user->id);
+        $redis->expire(sprintf("CurrentlyLoggedIn:%s", $token), 30);
     }
 
-    public function updateToken($token, $userID)
+    public function updateToken($token)
     {
-        Cache::tags(['userToken'])->put($token, $userID, 1);
+        $redis = Redis::connection();
+        $redis->expire(sprintf("CurrentlyLoggedIn:%s", $token), 30);
     }
 
     public function getAccuracy($player)

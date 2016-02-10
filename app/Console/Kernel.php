@@ -25,21 +25,6 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->call(function () {
-            if(Cache::has('currentLogin'))
-            {
-                $currentUsers = cache::get('currentLogin');
-                if(!is_null($currentUsers)) {
-                    foreach ($currentUsers as $key => $token) {
-                        if (!cache::has($token)) {
-                            unset($currentUsers[$key]);
-                        }
-                    }
-                } else {
-                    $currentUsers = array();
-                }
-                cache::put('currentLogin', $currentUsers, 999);
-            }
-        })->everyMinute();
+
     }
 }

@@ -30,9 +30,9 @@ Not telling you how to setup Laravel/Homestead
 ### Requirements
 
 - Osu! Stable(Fallback)
-- Redis/Memcached
+- Redis
 - HHVM/PHP7/PHP5.6
-- Cron Job
+- Cron Job (might be used in the future)
 
 Hosts
 ```
