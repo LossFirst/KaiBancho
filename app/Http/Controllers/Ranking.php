@@ -18,7 +18,6 @@ class Ranking extends Controller
 {
     public function getScores(Request $request)
     {
-        log::info($request->all());
         try {
             OsuBeatmaps::where('checksum', $request->query("c"))->firstOrFail();
         } catch(\Exception $e) {
@@ -88,8 +87,7 @@ class Ranking extends Controller
         $helper = new Helper();
         $score = explode(":", $helper->decrypt($request->input('score'), $request->input('iv')));
         $user = User::where('name', $score[1])->first();
-        $passed = $score[14] === 'True' ? true: false;
-        if($passed) {
+        if($score[14] === 'True') {
             DB::table('osu_scores')->insert([
                 'beatmapHash' => $score[0],
                 'user_id' => $user->id,
@@ -102,9 +100,9 @@ class Ranking extends Controller
                 'countMiss' => $score[8],
                 'countKatu' => $score[7],
                 'countGeki' => $score[6],
-                'fc' => $score[11],
+                'fc' => ($score[11] === 'True' ? true: false),
                 'mods' => $score[13],
-                'pass' => $passed,
+                'pass' => ($score[14] === 'True' ? true: false),
                 'checksum' => $score[16],
                 'created_at' => Carbon::now()
             ]);
