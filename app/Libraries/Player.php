@@ -125,6 +125,11 @@ class Player {
         );
     }
 
+    public function getDataFromName($name)
+    {
+        return User::where('name', $name)->first();
+    }
+
     public function isPlayerOnline($name)
     {
         $ids = $this->getAllIDs($this->getAllTokens());

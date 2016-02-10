@@ -51,11 +51,24 @@ class RedisMessage
         {
             return $this->command($messageArray, $user);
         }
+        $timestamp = strtotime(Carbon::now());
+        $random = rand(1,1000);
+        if($toChannelArray[0] != 35)
+        {
+            $toUser = $player->getDataFromName($channel);
+            $redis->set(sprintf("chat:%d:%d:%s", $toUser->id, $random, $timestamp), json_encode(array($user->name, $message, $channel, $user->id)));
+            $redis->expire(sprintf("chat:%d:%d:%s", $toUser->id, $random, $timestamp), 30);
+        }
 
         $timestamp = strtotime(Carbon::now());
         $random = rand(1,1000);
-        $redis->set(sprintf("chat:%d:%d:%s", $user->id, $random, $timestamp), json_encode(array($user->name, $message, $channel, $user->id)));
-        $redis->expire(sprintf("chat:%d:%d:%s", $user->id, $random, $timestamp), 30);
+        foreach($player->getAllIDs($player->getAllTokens()) as $id)
+        {
+            if($id != $user->id) {
+                $redis->set(sprintf("chat:%d:%d:%s", $id, $random, $timestamp), json_encode(array($user->name, $message, $channel, $user->id)));
+                $redis->expire(sprintf("chat:%d:%d:%s", $id, $random, $timestamp), 30);
+            }
+        }
     }
 
     public function isCommand($messageArray)
