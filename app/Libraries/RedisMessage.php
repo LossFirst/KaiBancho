@@ -25,50 +25,31 @@ class RedisMessage
         return $chatMessage;
     }
 
-    public function SendMessage($user, $data)
+    public function SendMessage($user, $messageData)
     {
         $redis = Redis::connection();
         $packet = new Packet();
         $player = new Player();
-        $messageArray = array();
-        foreach (array_slice($data, 11) as $item) {
-            if ($item == 11) {
-                break;
-            }
-            array_push($messageArray, $item);
-        }
-        $message = implode(array_map("chr", $messageArray));
-        $toChannelArray = array();
-        foreach (array_slice($data, 11 + count($messageArray) + 2) as $item) {
-            if ($item == 0) {
-                break;
-            }
-            array_push($toChannelArray, $item);
-        }
-        $channel = implode(array_map("chr", $toChannelArray));
 
-        if($this->isCommand($messageArray))
-        {
-            return $this->command($messageArray, $user);
-        }
         $timestamp = strtotime(Carbon::now());
         $random = rand(1,1000);
-        if($toChannelArray[0] != 35)
+
+        if(strpos($messageData['Channel'],'#') === false)
         {
-            $toUser = $player->getDataFromName($channel);
-            $redis->set(sprintf("chat:%d:%d:%s", $toUser->id, $random, $timestamp), json_encode(array($user->name, $message, $channel, $user->id)));
+            $toUser = $player->getDataFromName($messageData['Channel']);
+            $redis->set(sprintf("chat:%d:%d:%s", $toUser->id, $random, $timestamp), json_encode(array($user->name, $messageData['Message'], $messageData['Channel'], $user->id)));
             $redis->expire(sprintf("chat:%d:%d:%s", $toUser->id, $random, $timestamp), 30);
+            return true;
         }
 
-        $timestamp = strtotime(Carbon::now());
-        $random = rand(1,1000);
         foreach($player->getAllIDs($player->getAllTokens()) as $id)
         {
             if($id != $user->id) {
-                $redis->set(sprintf("chat:%d:%d:%s", $id, $random, $timestamp), json_encode(array($user->name, $message, $channel, $user->id)));
+                $redis->set(sprintf("chat:%d:%d:%s", $id, $random, $timestamp), json_encode(array($user->name, $messageData['Message'], $messageData['Channel'], $user->id)));
                 $redis->expire(sprintf("chat:%d:%d:%s", $id, $random, $timestamp), 30);
             }
         }
+        return true;
     }
 
     public function isCommand($messageArray)

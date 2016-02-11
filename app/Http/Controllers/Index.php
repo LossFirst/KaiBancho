@@ -35,8 +35,8 @@ class Index extends Controller
         $userID = $player->getIDfromToken($osutoken, true);
         $player->updateToken($osutoken, $userID);
         $body = $request->getContent();
-        $packet->debug($body);
-        $output = $packet->check(unpack('C*', $body), $userID, $osutoken);
+        //$packet->debug($body);
+        $output = $packet->check($body, $userID, $osutoken);
         return response()->make($output)->withHeaders(['cho-protocol' => config('bancho.ProtocolVersion') ,'Connection' => 'Keep-Alive']);
     }
 

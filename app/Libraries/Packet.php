@@ -98,17 +98,34 @@ class Packet {
         );
     }
     
-    public function check($data, $userID, $osutoken)
+    public function check($body, $userID, $osutoken)
     {
         $output = array();
+        $data = unpack('C*', $body); //For now for backwards compat till I convert the whole packet reading.
         if (is_array($data)) {
             $player = new Player();
             $helper = new Helper();
             if ($data[1] != 0) {
                 switch ($data[1]) {
                     case 1: //Chat message
+                        $messageData = array();
+                        $format = 'CPacket/'.
+                            'x2/'.
+                            'CLength/'. //Length from 4th key from array
+                            'x6/'.
+                            'CMessageLength';
+                        $headerData = unpack($format, $body);
+                        $messageData = array_merge($messageData, $headerData);
+                        $format = '@12/X/'.
+                            sprintf('A%dMessage/', $headerData['MessageLength']).
+                            'x/'.
+                            'CChannelLength/'.
+                            'A*Channel';
+                        $bodyData = unpack($format, $body);
+                        $messageData = array_merge($messageData, $bodyData);
+
                         $message = new RedisMessage();
-                        $message->SendMessage($player->getDatafromID($userID), $data);
+                        $message->SendMessage($player->getDatafromID($userID), $messageData);
                         break;
                     case 2: //Logout packet (Only gets called if you Alt+F4)
                         $player->expireToken($osutoken);
@@ -124,8 +141,24 @@ class Packet {
                     case 16: //TODO: Spectating [$data[8] = targeted user]
                         break;
                     case 25: //Private Message
+                        $messageData = array();
+                        $format = 'CPacket/'.
+                            'x2/'.
+                            'CLength/'. //Length from 4th key from array
+                            'x6/'.
+                            'CMessageLength';
+                        $headerData = unpack($format, $body);
+                        $messageData = array_merge($messageData, $headerData);
+                        $format = '@12/X/'.
+                            sprintf('A%dMessage/', $headerData['MessageLength']).
+                            'x/'.
+                            'CChannelLength/'.
+                            'A*Channel';
+                        $bodyData = unpack($format, $body);
+                        $messageData = array_merge($messageData, $bodyData);
+
                         $message = new RedisMessage();
-                        $message->SendMessage($player->getDatafromID($userID), $data);
+                        $message->SendMessage($player->getDatafromID($userID), $messageData);
                         break;
                     case 29: //Get all multiplayer lobbies
                         break;
@@ -175,26 +208,21 @@ class Packet {
         $packet = unpack('C1', $data);
         if($packet[1] == 1 || $packet[1] == 25) //reduce results
         {
-            $output = array();
+            $messageData = array();
             $header = 'CPacket/'.
-                '@3/'.
+                'x2/'.
                 'CLength/'. //Length from 4th key from array
-                '@10/'.
+                'x6/'.
                 'CMessageLength';
             $headerData = unpack($header, $data);
-            Log::info($output);
-            $output = array_merge($output, $headerData);
+            $messageData = array_merge($messageData, $headerData);
             $body = '@12/X/'.
                 sprintf('A%dMessage/', $headerData['MessageLength']).
-                sprintf('@%d/', $headerData['MessageLength']+12).
-                'CChannelLength';
+                'x/'.
+                'CChannelLength/'.
+                'A*Channel';
             $bodyData = unpack($body, $data);
-            $output = array_merge($output, $bodyData);
-            $channel = sprintf('@%d/', 13+$headerData['MessageLength']).
-                sprintf('A%dChannel', $bodyData['ChannelLength']);
-            $channelData = unpack($channel, $data);
-            $output = array_merge($output, $channelData);
-            Log::info($output);
+            $messageData = array_merge($messageData, $bodyData);
         }
     }
 }
