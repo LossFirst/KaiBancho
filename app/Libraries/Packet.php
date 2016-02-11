@@ -173,7 +173,7 @@ class Packet {
     public function debug($data)
     {
         $packet = unpack('C1', $data);
-        if($packet[1] == 1) //reduce results
+        if($packet[1] == 1 || $packet[1] == 25) //reduce results
         {
             $output = array();
             $header = 'CPacket/'.
