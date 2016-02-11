@@ -127,6 +127,10 @@ class Packet {
                         $message = new RedisMessage();
                         $message->SendMessage($player->getDatafromID($userID), $data);
                         break;
+                    case 29: //Get all multiplayer lobbies
+                        break;
+                    case 31: //Create Lobby [$data[18] to first 0 = Player Name, $data[18]+count(name)+3 to first 0 =
+                        break;
                     case 64: //Remove channel ($data[10]+ = Channel Name)
                         break;
                     case 68: //Join channel
@@ -157,8 +161,8 @@ class Packet {
                         $output = $this->create(11 ,$player->getDataDetailed($player->getDatafromID($userID)));
                         break;
                     default:
-                        Log::info($data);
-                        Log::info(sprintf("PACKET: %s", implode(array_map("chr", $data))));
+                        //Log::info($data);
+                        //Log::info(sprintf("PACKET: %s", implode(array_map("chr", $data))));
                         break;
                 }
             }

@@ -33,10 +33,10 @@ class Index extends Controller
         $player = new Player();
         $packet = new Packet();
         $userID = $player->getIDfromToken($osutoken, true);
-        $player->updateToken($osutoken);
+        $player->updateToken($osutoken, $userID);
         $body = $request->getContent();
         $output = $packet->check(unpack('C*', $body), $userID, $osutoken);
-        return $output;
+        return response()->make($output)->withHeaders(['cho-protocol' => config('bancho.ProtocolVersion') ,'Connection' => 'Keep-Alive']);
     }
 
     function loginFunction($username, $hash)
@@ -68,7 +68,7 @@ class Index extends Controller
             );
             $token = $helper->generateToken();
             $player->setToken($token, $user);
-            return Response::make(implode(array_map("chr", $output)), 200, ['cho-token' => $token]);
+            return response()->make(implode(array_map("chr", $output)))->header('cho-token', $token);
         } else {
             Log::info($username . " has failed to logged in");
         }

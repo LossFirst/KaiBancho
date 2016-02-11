@@ -54,11 +54,23 @@ class Player {
         $packet = new Packet();
         $output = array();
         foreach($ids as $id) {
-            $user = $this->getDatafromID($id);
-            $output = array_merge($output, $packet->create(83, $this->getData($user)));
-            $output = array_merge($output, $packet->create(11, $this->getDataDetailed($user)));
+            if($this->isIDOnline($id)) {
+                $user = $this->getDatafromID($id);
+                $output = array_merge($output, $packet->create(83, $this->getData($user)));
+                $output = array_merge($output, $packet->create(11, $this->getDataDetailed($user)));
+            }
         }
         return $output;
+    }
+
+    public function isIDOnline($id)
+    {
+        $redis = Redis::connection();
+        if($redis->exists(sprintf("CurrentlyLoggedInID:%d",$id)))
+        {
+            return true;
+        };
+        return false;
     }
 
     public function getDatafromID($id)
@@ -148,13 +160,16 @@ class Player {
     {
         $redis = Redis::connection();
         $redis->set(sprintf("CurrentlyLoggedIn:%s", $token), $user->id);
+        $redis->set(sprintf("CurrentlyLoggedInID:%d", $user->id), $user->id);
         $redis->expire(sprintf("CurrentlyLoggedIn:%s", $token), 30);
+        $redis->expire(sprintf("CurrentlyLoggedInID:%d", $user->id), 30);
     }
 
-    public function updateToken($token)
+    public function updateToken($token, $userID)
     {
         $redis = Redis::connection();
         $redis->expire(sprintf("CurrentlyLoggedIn:%s", $token), 30);
+        $redis->expire(sprintf("CurrentlyLoggedInID:%d", $userID), 30);
     }
 
     public function expireToken($token)

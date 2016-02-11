@@ -53,6 +53,6 @@ $response = $kernel->handle(
     $request = Illuminate\Http\Request::capture()
 );
 
-$response->header('cho-protocol','19')->send();
+$response->send();
 
 $kernel->terminate($request, $response);
