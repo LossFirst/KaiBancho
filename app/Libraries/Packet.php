@@ -175,21 +175,22 @@ class Packet {
         $packet = unpack('C1', $data);
         if($packet[1] == 1) //reduce results
         {
-            //Log::info(unpack('C*',$data));
             $output = array();
-            $header = 'C1Packet/'.
+            $header = 'CPacket/'.
                 '@3/'.
-                'C1Length/'.
+                'CLength/'. //Length from 4th key from array
                 '@10/'.
-                'C1MessageLength';
+                'CMessageLength';
             $headerData = unpack($header, $data);
+            Log::info($output);
             $output = array_merge($output, $headerData);
-            $body = '@12/'.
+            $body = '@12/X/'.
                 sprintf('A%dMessage/', $headerData['MessageLength']).
-                'C1ChannelLength';
+                sprintf('@%d/', $headerData['MessageLength']+12).
+                'CChannelLength';
             $bodyData = unpack($body, $data);
             $output = array_merge($output, $bodyData);
-            $channel = sprintf('@%d/', 12+$headerData['MessageLength']+1).
+            $channel = sprintf('@%d/', 13+$headerData['MessageLength']).
                 sprintf('A%dChannel', $bodyData['ChannelLength']);
             $channelData = unpack($channel, $data);
             $output = array_merge($output, $channelData);
