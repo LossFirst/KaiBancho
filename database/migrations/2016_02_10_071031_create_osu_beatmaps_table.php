@@ -34,6 +34,7 @@ class CreateOsuBeatmapsTable extends Migration
             $table->float('difficultyrating');
             $table->mediumInteger('playcount');
             $table->mediumInteger('passcount');
+            $table->index('checksum');
             $table->timestamps();
         });
     }

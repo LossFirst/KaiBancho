@@ -15,7 +15,8 @@ class CreateOsuScoresTable extends Migration
         Schema::create('osu_scores', function (Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->increments('id');
-            $table->string('beatmapHash', 34);
+            $table->string('beatmapHash', 32);
+            $table->foreign('beatmapHash')->references('checksum')->on('osu_beatmaps');
             $table->integer('user_id')->unsigned();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->integer('score');

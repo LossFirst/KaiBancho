@@ -12,7 +12,6 @@ class Player {
     {
         $redis = Redis::connection();
         $allKeys = $redis->keys('CurrentlyLoggedIn:*');
-        Log::info($allKeys);
         return $allKeys;
     }
 

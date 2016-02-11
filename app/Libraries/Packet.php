@@ -169,4 +169,31 @@ class Packet {
         }
         return implode(array_map("chr", $output));
     }
+
+    public function debug($data)
+    {
+        $packet = unpack('C1', $data);
+        if($packet[1] == 1) //reduce results
+        {
+            //Log::info(unpack('C*',$data));
+            $output = array();
+            $header = 'C1Packet/'.
+                '@3/'.
+                'C1Length/'.
+                '@10/'.
+                'C1MessageLength';
+            $headerData = unpack($header, $data);
+            $output = array_merge($output, $headerData);
+            $body = '@12/'.
+                sprintf('A%dMessage/', $headerData['MessageLength']).
+                'C1ChannelLength';
+            $bodyData = unpack($body, $data);
+            $output = array_merge($output, $bodyData);
+            $channel = sprintf('@%d/', 12+$headerData['MessageLength']+1).
+                sprintf('A%dChannel', $bodyData['ChannelLength']);
+            $channelData = unpack($channel, $data);
+            $output = array_merge($output, $channelData);
+            Log::info($output);
+        }
+    }
 }
