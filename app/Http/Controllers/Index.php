@@ -52,7 +52,7 @@ class Index extends Controller
             $output = array_merge(
                 $packet->create(92, $user->bantime),	//ban status/time
                 $packet->create(5, $user->id),	//user id
-                $packet->create(75, 19),	//bancho protocol version
+                $packet->create(75, config('bancho.ProtocolVersion')),	//bancho protocol version
                 $packet->create(71, $user->usergroup),	//user rank (supporter etc)
                 //$packet->create(72, array(3, 4)),	//friend list
                 $packet->create(83, $player->getData($user)),

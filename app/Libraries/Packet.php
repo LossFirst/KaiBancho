@@ -10,8 +10,8 @@ class Packet {
         switch ($type) {
             //string
             case 24:	//show custom, orange notification
-            case 64:	//Main channel
-            case 66:	//remove channel?
+            case 64:	//TODO: Join Channel [First part = String (Channel Name), second part = Integer (How many connected users)]
+            case 66:	//TODO: Remove Channel [First part = String (Channel Name), second part = Integer (How many connected users)]
             case 105:	//show scary msg
                 $toreturn = $helper->ULeb128($data);
                 break;
@@ -105,8 +105,9 @@ class Packet {
         if (is_array($data)) {
             $player = new Player();
             $helper = new Helper();
-            if ($data[1] != 0) {
-                switch ($data[1]) {
+            $packetNum = unpack('C', $body);
+            if ($packetNum[1] != 0) {
+                switch ($packetNum[1]) {
                     case 1: //Chat message
                         $messageData = array();
                         $format = 'CPacket/'.
@@ -164,17 +165,36 @@ class Packet {
                         break;
                     case 31: //Create Lobby [$data[18] to first 0 = Player Name, $data[18]+count(name)+3 to first 0 =
                         break;
-                    case 64: //Remove channel ($data[10]+ = Channel Name)
+                    case 63: //Join Channel
+                        $ChannelData = array();
+                        $format = 'CPacket/'.
+                            'x2/'.
+                            'CHeaderLength/'.
+                            'x4/'.
+                            'CChannelLength';
+                        $ChannelData = array_merge($ChannelData, unpack($format, $body));
+                        $format = '@9/'.sprintf('A%dChannel',$ChannelData['ChannelLength']);
+                        $ChannelData = array_merge($ChannelData, unpack($format, $body));
+
+                        $output = $this->create(64, $ChannelData['Channel']);
                         break;
-                    case 68: //Join channel
-                        if (array_slice($data, -4)[1] == 35) {
-                            $output = array_merge(
-                                $this->create(64, implode(array_map("chr", array_slice($data, -4))))
-                            );
-                        }
+                    case 68: //Some thing to do with checking beatmaps at start?
                         break;
                     case 73: //TODO: Add friend [$data[8] = targeted user]
                     case 74: //TODO: Remove friend [$data[8] = targeted user]
+                        break;
+                    case 78: //Remove channel
+                        $ChannelData = array();
+                        $format = 'CPacket/'.
+                            'x2/'.
+                            'CHeaderLength/'.
+                            'x4/'.
+                            'CChannelLength';
+                        $ChannelData = array_merge($ChannelData, unpack($format, $body));
+                        $format = '@9/'.sprintf('A%dChannel',$ChannelData['ChannelLength']);
+                        $ChannelData = array_merge($ChannelData, unpack($format, $body));
+
+                        $output = $this->create(66, $ChannelData['Channel']);
                         break;
                     case 79: //Gets all users online
                         //$output = $player->getOnline();
@@ -206,23 +226,9 @@ class Packet {
     public function debug($data)
     {
         $packet = unpack('C1', $data);
-        if($packet[1] == 1 || $packet[1] == 25) //reduce results
+        if($packet[1] == 78) //reduce results
         {
-            $messageData = array();
-            $header = 'CPacket/'.
-                'x2/'.
-                'CLength/'. //Length from 4th key from array
-                'x6/'.
-                'CMessageLength';
-            $headerData = unpack($header, $data);
-            $messageData = array_merge($messageData, $headerData);
-            $body = '@12/X/'.
-                sprintf('A%dMessage/', $headerData['MessageLength']).
-                'x/'.
-                'CChannelLength/'.
-                'A*Channel';
-            $bodyData = unpack($body, $data);
-            $messageData = array_merge($messageData, $bodyData);
+            //More Debugging soon
         }
     }
 }
