@@ -106,118 +106,124 @@ class Packet {
             $player = new Player();
             $helper = new Helper();
             $packetNum = unpack('C', $body);
-            if ($packetNum[1] != 0) {
-                switch ($packetNum[1]) {
-                    case 1: //Chat message
-                        $messageData = array();
-                        $format = 'CPacket/'.
-                            'x2/'.
-                            'CLength/'. //Length from 4th key from array
-                            'x6/'.
-                            'CMessageLength';
-                        $headerData = unpack($format, $body);
-                        $messageData = array_merge($messageData, $headerData);
-                        $format = '@12/X/'.
-                            sprintf('A%dMessage/', $headerData['MessageLength']).
-                            'x/'.
-                            'CChannelLength/'.
-                            'A*Channel';
-                        $bodyData = unpack($format, $body);
-                        $messageData = array_merge($messageData, $bodyData);
-
-                        $message = new RedisMessage();
-                        $message->SendMessage($player->getDatafromID($userID), $messageData);
-                        break;
-                    case 2: //Logout packet (Only gets called if you Alt+F4)
-                        $player->expireToken($osutoken);
-                        break;
-                    case 3: //Initial fetch for local player OR could be the data for getting all players (Would make even more sense)
-                        $bot = $player->getDatafromID(2);
-                        $output = array_merge($this->create(83, $player->getData($bot)));
-                        break;
-                    case 4: //TODO: Default chat update
-                        $message = new RedisMessage();
-                        $output = $message->GetMessage($userID);
-                        break;
-                    case 16: //TODO: Spectating [$data[8] = targeted user]
-                        break;
-                    case 25: //Private Message
-                        $messageData = array();
-                        $format = 'CPacket/'.
-                            'x2/'.
-                            'CLength/'. //Length from 4th key from array
-                            'x6/'.
-                            'CMessageLength';
-                        $headerData = unpack($format, $body);
-                        $messageData = array_merge($messageData, $headerData);
-                        $format = '@12/X/'.
-                            sprintf('A%dMessage/', $headerData['MessageLength']).
-                            'x/'.
-                            'CChannelLength/'.
-                            'A*Channel';
-                        $bodyData = unpack($format, $body);
-                        $messageData = array_merge($messageData, $bodyData);
-
-                        $message = new RedisMessage();
-                        $message->SendMessage($player->getDatafromID($userID), $messageData);
-                        break;
-                    case 29: //Get all multiplayer lobbies
-                        break;
-                    case 31: //Create Lobby [$data[18] to first 0 = Player Name, $data[18]+count(name)+3 to first 0 =
-                        break;
-                    case 63: //Join Channel
-                        $ChannelData = array();
-                        $format = 'CPacket/'.
-                            'x2/'.
-                            'CHeaderLength/'.
-                            'x4/'.
-                            'CChannelLength';
-                        $ChannelData = array_merge($ChannelData, unpack($format, $body));
-                        $format = '@9/'.sprintf('A%dChannel',$ChannelData['ChannelLength']);
-                        $ChannelData = array_merge($ChannelData, unpack($format, $body));
-
-                        $output = $this->create(64, $ChannelData['Channel']);
-                        break;
-                    case 68: //Some thing to do with checking beatmaps at start?
-                        break;
-                    case 73: //TODO: Add friend [$data[8] = targeted user]
-                    case 74: //TODO: Remove friend [$data[8] = targeted user]
-                        break;
-                    case 78: //Remove channel
-                        $ChannelData = array();
-                        $format = 'CPacket/'.
-                            'x2/'.
-                            'CHeaderLength/'.
-                            'x4/'.
-                            'CChannelLength';
-                        $ChannelData = array_merge($ChannelData, unpack($format, $body));
-                        $format = '@9/'.sprintf('A%dChannel',$ChannelData['ChannelLength']);
-                        $ChannelData = array_merge($ChannelData, unpack($format, $body));
-
-                        $output = $this->create(66, $ChannelData['Channel']);
-                        break;
-                    case 79: //Gets all users online
-                        //$output = $player->getOnline();
-                        break;
-                    case 85: //Updates all users, also checks if they are online (I assume)
-                        $output = $player->getOnline();
-                        $output = array_merge($output, $player->getOnlineDetailed($helper->parsePacket85($data)));
-                        break;
-                    default:
-                        Log::info($data);
-                        Log::info(sprintf("PACKET: %s", implode(array_map("chr", $data))));
-                        break;
-                }
-            } else {
-                switch ($data[4]) {
-                    case 14:
+            switch ($packetNum[1]) {
+                case 0: //Update local player
+                    if($data[4] == 14) //Using length for default update for player
+                    {
                         $output = $this->create(11 ,$player->getDataDetailed($player->getDatafromID($userID)));
-                        break;
-                    default:
-                        //Log::info($data);
-                        //Log::info(sprintf("PACKET: %s", implode(array_map("chr", $data))));
-                        break;
-                }
+                    }
+                    break;
+                case 1: //Chat message
+                    $messageData = array();
+                    $format = 'CPacket/'.
+                        'x2/'.
+                        'CLength/'.
+                        'x6/'.
+                        'CMessageLength';
+                    $headerData = unpack($format, $body);
+                    $messageData = array_merge($messageData, $headerData);
+                    $format = '@12/X/'.
+                        sprintf('A%dMessage/', $headerData['MessageLength']).
+                        'x/'.
+                        'CChannelLength/'.
+                        'A*Channel';
+                    $bodyData = unpack($format, $body);
+                    $messageData = array_merge($messageData, $bodyData);
+
+                    $message = new RedisMessage();
+                    $message->SendMessage($player->getDatafromID($userID), $messageData);
+                    break;
+                case 2: //Logout packet
+                    $player->expireToken($osutoken);
+                    break;
+                case 3: //Initial fetch for local player OR could be the data for getting all players (Would make even more sense)
+                    break;
+                case 4: //TODO: Default chat update
+                    $message = new RedisMessage();
+                    $output = $message->GetMessage($userID);
+                    break;
+                case 16: //TODO: Spectating (Start spectating)
+                    break;
+                case 17: //TODO: Spectating (Stop spectating)
+                    break;
+                case 18: //TODO: Spectating (Multiple users spectating)
+                    break;
+                case 25: //Private Message
+                    $messageData = array();
+                    $format = 'CPacket/'.
+                        'x2/'.
+                        'CLength/'. //Length from 4th key from array
+                        'x6/'.
+                        'CMessageLength';
+                    $headerData = unpack($format, $body);
+                    $messageData = array_merge($messageData, $headerData);
+                    $format = '@12/X/'.
+                        sprintf('A%dMessage/', $headerData['MessageLength']).
+                        'x/'.
+                        'CChannelLength/'.
+                        'A*Channel';
+                    $bodyData = unpack($format, $body);
+                    $messageData = array_merge($messageData, $bodyData);
+
+                    $message = new RedisMessage();
+                    $message->SendMessage($player->getDatafromID($userID), $messageData);
+                    break;
+                case 29: //TODO: Multiplayer (List of lobbies)
+                    break;
+                case 31: //TODO: Multiplayer (Create Lobby)
+                    break;
+                case 32: //TODO: Multiplayer (Join Lobby)
+                    break;
+                case 33: //TODO: Multiplayer (Leave Lobby)
+                    break;
+                case 63: //Join Channel
+                    $ChannelData = array();
+                    $format = 'CPacket/'.
+                        'x2/'.
+                        'CHeaderLength/'.
+                        'x4/'.
+                        'CChannelLength';
+                    $ChannelData = array_merge($ChannelData, unpack($format, $body));
+                    $format = '@9/'.sprintf('A%dChannel',$ChannelData['ChannelLength']);
+                    $ChannelData = array_merge($ChannelData, unpack($format, $body));
+
+                    $output = $this->create(64, $ChannelData['Channel']);
+                    break;
+                case 68: //Some thing to do with checking beatmaps at start? (Yea, we won't touch this, looks like it'll be too much (up to 4000+ lines))
+                    break;
+                case 73: //TODO: Add friend [$data[8] = targeted user]
+                case 74: //TODO: Remove friend [$data[8] = targeted user]
+                    break;
+                case 78: //Remove channel
+                    $ChannelData = array();
+                    $format = 'CPacket/'.
+                        'x2/'.
+                        'CHeaderLength/'.
+                        'x4/'.
+                        'CChannelLength';
+                    $ChannelData = array_merge($ChannelData, unpack($format, $body));
+                    $format = '@9/'.sprintf('A%dChannel',$ChannelData['ChannelLength']);
+                    $ChannelData = array_merge($ChannelData, unpack($format, $body));
+
+                    $output = $this->create(66, $ChannelData['Channel']);
+                    break;
+                case 79: //Gets all users online
+                    //$output = $player->getOnline();
+                    break;
+                case 85: //Updates all users, also checks if they are online (I assume)
+                    $output = $player->getOnline();
+                    $output = array_merge($output, $player->getOnlineDetailed($helper->parsePacket85($data)));
+                    break;
+                case 87: //TODO: Multiplayer (Invite player to lobby)
+                    break;
+                default:
+                    Log::info($data);
+                    Log::info(sprintf("PACKET: %s", implode(array_map("chr", $data))));
+                    break;
+            }
+            if($packetNum[1] == 0) { //Logging player information packet
+                Log::info($data);
+                Log::info(sprintf("PACKET: %s", implode(array_map("chr", $data))));
             }
         }
         return implode(array_map("chr", $output));
