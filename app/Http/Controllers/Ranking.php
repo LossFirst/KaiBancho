@@ -187,11 +187,13 @@ class Ranking extends Controller
 
     function calcPP($bmhash, $combo, $acc)
     {
+        $X = 1.1;
         $beatmap = OsuBeatmaps::where('checksum', $bmhash)->first();
         $approach = $beatmap->diff_approach;
+        $speed = ($beatmap->countTotal / $beatmap->total_length);
         $comboFloat = ($combo / $beatmap->countTotal);
-        $X = 1.1;
-        $data = ($comboFloat^$X + $approach^$X + $acc^$X)^(1/$X);
+        $comboSpeedStuff = (($speed + $comboFloat) / $X);
+        $data = ($comboSpeedStuff^$X + $approach^$X + $acc^$X)^(1/$X);
         log::info($data);
         return $data;
     }
