@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Route;
 
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
@@ -15,6 +16,24 @@ use App\Libraries\Player as Player;
 
 class Index extends Controller
 {
+    private $time_start = 0;
+    private $time_end = 0;
+    private $time = 0;
+    private $route = '';
+
+    public function __construct()
+    {
+        $this->time_start = microtime(true);
+    }
+
+    public function __destruct()
+    {
+        $this->time_end = microtime(true);
+        $this->time = ($this->time_end - $this->time_start)*1000;
+        if(config('bancho.debug') === true)
+            Log::info(sprintf("%s Total Execution Time: %d milliseconds", $this->route, $this->time));
+    }
+
     public function getIndex()
     {
         return view('welcome');
@@ -35,6 +54,7 @@ class Index extends Controller
         $userID = $player->getIDfromToken($osutoken, true);
         $player->updateToken($osutoken, $userID);
         $body = $request->getContent();
+        $this->route = sprintf('%s packet %s', Route::getCurrentRoute()->getActionName(), unpack('C',$body)[1]);
         //$packet->debug($body);
         $output = $packet->check($body, $userID, $osutoken);
         return response()->make($output)->withHeaders(['cho-protocol' => config('bancho.ProtocolVersion') ,'Connection' => 'Keep-Alive']);
@@ -42,6 +62,7 @@ class Index extends Controller
 
     function loginFunction($username, $hash)
     {
+        $this->route = Route::getCurrentRoute()->getActionName();
         if(Auth::attempt(['name' => $username, 'password' => $hash])) {
             $packet = new Packet();
             $helper = new Helper();

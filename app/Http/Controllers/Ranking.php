@@ -6,6 +6,7 @@ use App\OsuBeatmaps;
 use Carbon\Carbon;
 use Illuminate\Encryption\Encrypter;
 use Illuminate\Http\Request;
+use Route;
 
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
@@ -18,8 +19,27 @@ use Redis;
 
 class Ranking extends Controller
 {
+    private $time_start = 0;
+    private $time_end = 0;
+    private $time = 0;
+    private $route = '';
+
+    public function __construct()
+    {
+        $this->time_start = microtime(true);
+    }
+
+    public function __destruct()
+    {
+        $this->time_end = microtime(true);
+        $this->time = ($this->time_end - $this->time_start)*1000;
+        if(config('bancho.debug') === true)
+            Log::info(sprintf("%s Total Execution Time: %d milliseconds", $this->route, $this->time));
+    }
+
     public function getScores(Request $request)
     {
+        $this->route = Route::getCurrentRoute()->getActionName();
         $checksum = $request->query("c");
         $beatmapID = $request->query("i");
         $beatmap = Cache::get(sprintf("%s:%s", $checksum, $beatmapID), function() use ($checksum, $beatmapID) {
@@ -90,6 +110,7 @@ class Ranking extends Controller
 
     public function submitModular(Request $request)
     {
+        $this->route = Route::getCurrentRoute()->getActionName();
         $helper = new Helper();
         $score = explode(":", $helper->decrypt($request->input('score'), $request->input('iv')));
         $user = User::where('name', $score[1])->first();

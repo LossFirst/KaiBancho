@@ -10,8 +10,8 @@ class Packet {
         switch ($type) {
             //string
             case 24:	//show custom, orange notification
-            case 64:	//TODO: Join Channel [First part = String (Channel Name), second part = Integer (How many connected users)]
-            case 66:	//TODO: Remove Channel [First part = String (Channel Name), second part = Integer (How many connected users)]
+            case 64:	//Join Channel
+            case 66:	//Remove Channel
             case 105:	//show scary msg
                 $toreturn = $helper->ULeb128($data);
                 break;
@@ -191,8 +191,8 @@ class Packet {
                     break;
                 case 68: //Some thing to do with checking beatmaps at start? (Yea, we won't touch this, looks like it'll be too much (up to 4000+ lines))
                     break;
-                case 73: //TODO: Add friend [$data[8] = targeted user]
-                case 74: //TODO: Remove friend [$data[8] = targeted user]
+                case 73: //TODO: Add friend
+                case 74: //TODO: Remove friend
                     break;
                 case 78: //Remove channel
                     $ChannelData = array();
@@ -220,10 +220,6 @@ class Packet {
                     Log::info($data);
                     Log::info(sprintf("PACKET: %s", implode(array_map("chr", $data))));
                     break;
-            }
-            if($packetNum[1] == 0) { //Logging player information packet
-                Log::info($data);
-                Log::info(sprintf("PACKET: %s", implode(array_map("chr", $data))));
             }
         }
         return implode(array_map("chr", $output));
