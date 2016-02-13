@@ -17,7 +17,7 @@ A framework I am creating for fun and educational purposes, thus the reason I pi
 - [X] Online user list (Mostly working, needs to clear list after logout)
 - [X] Packet Receiving
 - [ ] Spectating
-- [ ] PP
+- [X] PP (Super simple, needs to be extended)
 - [X] Global Ranks
 - [ ] Country Ranks
 - [X] Accuracy

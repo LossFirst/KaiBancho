@@ -113,39 +113,118 @@ class Ranking extends Controller
         $this->route = Route::getCurrentRoute()->getActionName();
         $helper = new Helper();
         $score = explode(":", $helper->decrypt($request->input('score'), $request->input('iv')));
-        $user = User::where('name', $score[1])->first();
-        if($score[14] === 'True') {
-            DB::table('osu_scores')->insert([
-                'beatmapHash' => $score[0],
-                'user_id' => $user->id,
-                'score' => $score[9],
-                'rank' => $score[12],
-                'combo' => $score[10],
-                'count50' => $score[5],
-                'count100' => $score[4],
-                'count300' => $score[3],
-                'countMiss' => $score[8],
-                'countKatu' => $score[7],
-                'countGeki' => $score[6],
-                'fc' => ($score[11] === 'True' ? true: false),
-                'mods' => $score[13],
-                'pass' => ($score[14] === 'True' ? true: false),
-                'checksum' => $score[16],
-                'created_at' => Carbon::now()
-            ]);
-            if($score[10] > $user->OsuUserStats->max_combo)
-            {
-                $user->OsuUserStats->max_combo = $score[10];
+        $mods = $this->mods($score[13]);
+        if($mods->autopilot == false && $mods->autoplay == false && $mods->relax == false) {
+            $user = User::where('name', $score[1])->first();
+            if ($score[14] === 'True') {
+                DB::table('osu_scores')->insert([
+                    'beatmapHash' => $score[0],
+                    'user_id' => $user->id,
+                    'score' => $score[9],
+                    'rank' => $score[12],
+                    'combo' => $score[10],
+                    'count50' => $score[5],
+                    'count100' => $score[4],
+                    'count300' => $score[3],
+                    'countMiss' => $score[8],
+                    'countKatu' => $score[7],
+                    'countGeki' => $score[6],
+                    'fc' => ($score[11] === 'True' ? true : false),
+                    'mods' => $score[13],
+                    'pass' => ($score[14] === 'True' ? true : false),
+                    'checksum' => $score[16],
+                    'created_at' => Carbon::now()
+                ]);
+                if ($score[10] > $user->OsuUserStats->max_combo) {
+                    $user->OsuUserStats->max_combo = $score[10];
+                }
+                $user->OsuUserStats->count300 = $user->OsuUserStats->count300 + $score[3] + $score[6];
+                $user->OsuUserStats->count100 = $user->OsuUserStats->count100 + $score[4] + $score[7];
+                $user->OsuUserStats->count50 = $user->OsuUserStats->count50 + $score[5];
+                $user->OsuUserStats->countMiss = $user->OsuUserStats->countMiss + $score[8];
+                $user->OsuUserStats->ranked_score = $user->OsuUserStats->ranked_score + $score[9];
+                $user->OsuUserStats->playcount = $user->OsuUserStats->playcount + 1;
+                $pp = $this->calcPP($score[0], $score[10], $this->getAccuracyAlt($score[3] + $score[6], $score[4] + $score[7], $score[5], $score[8]));
+                if ($mods->doubletime || $mods->nightcore)
+                {
+                    $pp = ($pp + ($pp * .12));
+                }
+                if ($mods->hidden)
+                {
+                    $pp = ($pp + ($pp * .06));
+                }
+                if ($mods->hardrock)
+                {
+                    $pp = ($pp + ($pp * .06));
+                }
+                if ($mods->flashlight)
+                {
+                    $pp = ($pp + ($pp * .12));
+                }
+                if ($mods->easy)
+                {
+                    $pp = ($pp - ($pp * .5));
+                }
+                if ($mods->halftime)
+                {
+                    $pp = ($pp - ($pp * .7));
+                }
+                if ($mods->nofail)
+                {
+                    $pp = ($pp - ($pp * .1));
+                }
+                if ($mods->spunout)
+                {
+                    $pp = ($pp - ($pp * .05));
+                }
+                $user->OsuUserStats->pp = $user->OsuUserStats->pp + $pp;
             }
-            $user->OsuUserStats->count300 = $user->OsuUserStats->count300 + $score[3] + $score[6];
-            $user->OsuUserStats->count100 = $user->OsuUserStats->count100 + $score[4] + $score[7];
-            $user->OsuUserStats->count50 = $user->OsuUserStats->count50 + $score[5];
-            $user->OsuUserStats->countMiss = $user->OsuUserStats->countMiss + $score[8];
-            $user->OsuUserStats->ranked_score = $user->OsuUserStats->ranked_score + $score[9];
-            $user->OsuUserStats->playcount = $user->OsuUserStats->playcount + 1;
+            $user->OsuUserStats->total_score = $user->OsuUserStats->total_score + $score[9];
+            $user->OsuUserStats->save();
         }
-        $user->OsuUserStats->total_score = $user->OsuUserStats->total_score + $score[9];
-        $user->OsuUserStats->save();
         return "";
+    }
+
+    function calcPP($bmhash, $combo, $acc)
+    {
+        $beatmap = OsuBeatmaps::where('checksum', $bmhash)->first();
+        $approach = $beatmap->diff_approach;
+        $comboFloat = ($combo / $beatmap->countTotal);
+        $X = 1.1;
+        $data = ($comboFloat^$X + $approach^$X + $acc^$X)^(1/$X);
+        log::info($data);
+        return $data;
+    }
+
+    function mods($mods)
+    {
+        $array = (object)array();
+        if(($mods - 16384) >= 0) { $array->perfect = true; $mods = ($mods - 16384); } else { $array->perfect = false; };
+        if(($mods - 8192) >= 0) { $array->autopilot = true; $mods = ($mods - 8192); } else { $array->autopilot = false; };
+        if(($mods - 4096) >= 0) { $array->spunout = true; $mods = ($mods - 4096); } else { $array->spunout = false; };
+        if(($mods - 2048) >= 0) { $array->autoplay = true; $mods = ($mods - 2048); } else { $array->autoplay = false; };
+        if(($mods - 1024) >= 0) { $array->flashlight = true; $mods = ($mods - 1024); } else { $array->flashlight = false; };
+        if(($mods - 512) >= 0) { $array->nightcore = true; $mods = ($mods - 512); } else { $array->nightcore = false; };
+        if(($mods - 256) >= 0) { $array->halftime = true; $mods = ($mods - 256); } else { $array->halftime = false; };
+        if(($mods - 128) >= 0) { $array->relax = true; $mods = ($mods - 128); } else { $array->relax = false; };
+        if(($mods - 64) >= 0) { $array->doubletime = true; $mods = ($mods - 64); } else { $array->doubletime = false; };
+        if(($mods - 32) >= 0) { $array->suddendeath = true; $mods = ($mods - 32); } else { $array->suddendeath = false; };
+        if(($mods - 16) >= 0) { $array->hardrock = true; $mods = ($mods - 16); } else { $array->hardrock = false; };
+        if(($mods - 8) >= 0) { $array->hidden = true; $mods = ($mods - 8); } else { $array->hidden = false; };
+        //if(($mods - 4) >= 0) { $array->novideo = true; $mods = ($mods - 4); } else { $array->novideo = false; };
+        if(($mods - 2) >= 0) { $array->easy = true; $mods = ($mods - 2); } else { $array->easy = false; };
+        if(($mods - 1) >= 0) { $array->nofail = true; $mods = ($mods - 1); } else { $array->nofail = false; };
+        return $array;
+    }
+
+    function getAccuracyAlt($c300, $c100, $c50, $cMiss)
+    {
+        $totalHits = ($c50 + $c100 + $c300 + $cMiss) * 300;
+        $hits = $c50 * 50 + $c100 * 100 + $c300 * 300;
+        if($hits && $totalHits != 0) {
+            return $hits / $totalHits;
+        } else {
+            return 0;
+        }
     }
 }

@@ -27,6 +27,7 @@ class CreateOsuUserStatsTable extends Migration
             $table->mediumInteger('s_rank_count')->length(9)->default(0);
             $table->mediumInteger('a_rank_count')->length(9)->default(0);
             $table->float('level')->unsigned();
+            $table->integer('pp')->length(6)->default(0);
             $table->mediumInteger('playcount')->length(9)->default(0);
             $table->smallInteger('max_combo')->length(10)->default(0);
             $table->timestamps();

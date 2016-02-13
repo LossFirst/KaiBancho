@@ -57,14 +57,16 @@ class Index extends Controller
         $this->route = sprintf('%s packet %s', Route::getCurrentRoute()->getActionName(), unpack('C',$body)[1]);
         //$packet->debug($body);
         $output = $packet->check($body, $userID, $osutoken);
-        return response()->make($output)->withHeaders(['cho-protocol' => config('bancho.ProtocolVersion') ,'Connection' => 'Keep-Alive']);
+        return response()->make($output)->withHeaders(['cho-protocol' => config('bancho.ProtocolVersion'), 'cho-token' => $osutoken, 'Connection' => 'Keep-Alive']);
     }
 
     function loginFunction($username, $hash)
     {
         $this->route = Route::getCurrentRoute()->getActionName();
+        $packet = new Packet();
+        $headers = [];
+        $output = array();
         if(Auth::attempt(['name' => $username, 'password' => $hash])) {
-            $packet = new Packet();
             $helper = new Helper();
             $player = new Player();
             $user = Auth::user();
@@ -90,11 +92,11 @@ class Index extends Controller
             );
             $token = $helper->generateToken();
             $player->setToken($token, $user);
-            return response()->make(implode(array_map("chr", $output)))->header('cho-token', $token);
+            $headers = ['cho-token' => $token];
         } else {
             Log::info($username . " has failed to logged in");
         }
-        return '';
+        return response()->make(implode(array_map("chr", $output)))->withHeaders(array_merge(['cho-protocol' => config('bancho.ProtocolVersion'), 'Connection' => 'Keep-Alive'], $headers));
     }
 
 }
