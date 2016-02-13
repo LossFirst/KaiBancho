@@ -62,6 +62,8 @@ Full license can be found in LICENSE.md
 
 - If you like osu!, play on the real server and maybe drop some cash on there too, believe in the peppy, and the peppy will believe in you, unless you're Cookiezi.
 
+- Howl for his Exp Calc (https://github.com/thehowl/OsuLevelCalculator)
+
 ## To peppy
 
 If you want this to be taken down, just throw me a tweet or email inquiry@itsyuka.pw and I'll take it down.

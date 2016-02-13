@@ -81,12 +81,12 @@ class Ranking extends Controller
         $output = "2|"; //-1 = Not Submitted, 0 = Pending, 1 = unknown, 2 = Ranked, 3 = Approved
         $output .= "false|"; //Need more info
         $output .= sprintf("%d|", (($beatmap === null) ? 0 : $beatmap->beatmapset_id)); //Beatmap Set ID
-        $output .= sprintf("%s|", (isset($beatmap) ? $request->query("i") : $beatmap->beatmap_id)); //Beatmap ID
+        $output .= sprintf("%s|", (($beatmap === null) ? $request->query("i") : $beatmap->beatmap_id)); //Beatmap ID
         $output .= sprintf("%d", DB::table('osu_scores')->where('beatmapHash', '=', $request->query("c"))->count()); //How many ranks are in the table for the ID Difficulty Hash
         $output .= "\n";
         $output .= "0"; //Something, idk
         $output .= "\n";
-        $output .= sprintf("[bold:0,size:20]%s|\n", (isset($beatmap) ?  str_replace(".osu","",$request->query("f")) : $beatmap->title)); //Sets text size and name for viewing
+        $output .= sprintf("[bold:0,size:20]%s|\n", (($beatmap === null) ?  str_replace(".osu","",$request->query("f")) : $beatmap->title)); //Sets text size and name for viewing
         $output .= "0"; //What is this, its not difficulty, not rating, might as well set to 0
         $output .= "\n";
         $user = User::where('name', $request->query("us"))->first();
@@ -115,72 +115,67 @@ class Ranking extends Controller
         $score = explode(":", $helper->decrypt($request->input('score'), $request->input('iv')));
         $mods = $this->mods($score[13]);
         if($mods->autopilot == false && $mods->autoplay == false && $mods->relax == false) {
-            $user = User::where('name', $score[1])->first();
-            if ($score[14] === 'True') {
-                DB::table('osu_scores')->insert([
-                    'beatmapHash' => $score[0],
-                    'user_id' => $user->id,
-                    'score' => $score[9],
-                    'rank' => $score[12],
-                    'combo' => $score[10],
-                    'count50' => $score[5],
-                    'count100' => $score[4],
-                    'count300' => $score[3],
-                    'countMiss' => $score[8],
-                    'countKatu' => $score[7],
-                    'countGeki' => $score[6],
-                    'fc' => ($score[11] === 'True' ? true : false),
-                    'mods' => $score[13],
-                    'pass' => ($score[14] === 'True' ? true : false),
-                    'checksum' => $score[16],
-                    'created_at' => Carbon::now()
-                ]);
-                if ($score[10] > $user->OsuUserStats->max_combo) {
-                    $user->OsuUserStats->max_combo = $score[10];
+            $beatmap = OsuBeatmaps::where('checksum', $score[0])->first();
+            if($beatmap !== null) {
+                $user = User::where('name', $score[1])->first();
+                if ($score[14] === 'True') {
+                    DB::table('osu_scores')->insert([
+                        'beatmapHash' => $score[0],
+                        'user_id' => $user->id,
+                        'score' => $score[9],
+                        'rank' => $score[12],
+                        'combo' => $score[10],
+                        'count50' => $score[5],
+                        'count100' => $score[4],
+                        'count300' => $score[3],
+                        'countMiss' => $score[8],
+                        'countKatu' => $score[7],
+                        'countGeki' => $score[6],
+                        'fc' => ($score[11] === 'True' ? true : false),
+                        'mods' => $score[13],
+                        'pass' => ($score[14] === 'True' ? true : false),
+                        'checksum' => $score[16],
+                        'created_at' => Carbon::now()
+                    ]);
+                    if ($score[10] > $user->OsuUserStats->max_combo) {
+                        $user->OsuUserStats->max_combo = $score[10];
+                    }
+                    $user->OsuUserStats->count300 = $user->OsuUserStats->count300 + $score[3] + $score[6];
+                    $user->OsuUserStats->count100 = $user->OsuUserStats->count100 + $score[4] + $score[7];
+                    $user->OsuUserStats->count50 = $user->OsuUserStats->count50 + $score[5];
+                    $user->OsuUserStats->countMiss = $user->OsuUserStats->countMiss + $score[8];
+                    $user->OsuUserStats->ranked_score = $user->OsuUserStats->ranked_score + $score[9];
+                    $user->OsuUserStats->playcount = $user->OsuUserStats->playcount + 1;
+                    $pp = $this->calcPP($score[0], $score[10], $this->getAccuracyAlt($score[3] + $score[6], $score[4] + $score[7], $score[5], $score[8]));
+                    if ($mods->doubletime || $mods->nightcore) {
+                        $pp = ($pp + ($pp * .12));
+                    }
+                    if ($mods->hidden) {
+                        $pp = ($pp + ($pp * .06));
+                    }
+                    if ($mods->hardrock) {
+                        $pp = ($pp + ($pp * .06));
+                    }
+                    if ($mods->flashlight) {
+                        $pp = ($pp + ($pp * .12));
+                    }
+                    if ($mods->easy) {
+                        $pp = ($pp - ($pp * .5));
+                    }
+                    if ($mods->halftime) {
+                        $pp = ($pp - ($pp * .7));
+                    }
+                    if ($mods->nofail) {
+                        $pp = ($pp - ($pp * .1));
+                    }
+                    if ($mods->spunout) {
+                        $pp = ($pp - ($pp * .05));
+                    }
+                    $user->OsuUserStats->pp = $user->OsuUserStats->pp + $pp;
                 }
-                $user->OsuUserStats->count300 = $user->OsuUserStats->count300 + $score[3] + $score[6];
-                $user->OsuUserStats->count100 = $user->OsuUserStats->count100 + $score[4] + $score[7];
-                $user->OsuUserStats->count50 = $user->OsuUserStats->count50 + $score[5];
-                $user->OsuUserStats->countMiss = $user->OsuUserStats->countMiss + $score[8];
-                $user->OsuUserStats->ranked_score = $user->OsuUserStats->ranked_score + $score[9];
-                $user->OsuUserStats->playcount = $user->OsuUserStats->playcount + 1;
-                $pp = $this->calcPP($score[0], $score[10], $this->getAccuracyAlt($score[3] + $score[6], $score[4] + $score[7], $score[5], $score[8]));
-                if ($mods->doubletime || $mods->nightcore)
-                {
-                    $pp = ($pp + ($pp * .12));
-                }
-                if ($mods->hidden)
-                {
-                    $pp = ($pp + ($pp * .06));
-                }
-                if ($mods->hardrock)
-                {
-                    $pp = ($pp + ($pp * .06));
-                }
-                if ($mods->flashlight)
-                {
-                    $pp = ($pp + ($pp * .12));
-                }
-                if ($mods->easy)
-                {
-                    $pp = ($pp - ($pp * .5));
-                }
-                if ($mods->halftime)
-                {
-                    $pp = ($pp - ($pp * .7));
-                }
-                if ($mods->nofail)
-                {
-                    $pp = ($pp - ($pp * .1));
-                }
-                if ($mods->spunout)
-                {
-                    $pp = ($pp - ($pp * .05));
-                }
-                $user->OsuUserStats->pp = $user->OsuUserStats->pp + $pp;
+                $user->OsuUserStats->total_score = $user->OsuUserStats->total_score + $score[9];
+                $user->OsuUserStats->save();
             }
-            $user->OsuUserStats->total_score = $user->OsuUserStats->total_score + $score[9];
-            $user->OsuUserStats->save();
         }
         return "";
     }
