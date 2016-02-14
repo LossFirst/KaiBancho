@@ -77,10 +77,10 @@ class RedisMessage
         switch(implode(array_map("chr", $command)))
         {
             case "!roll":
-                $data = json_encode(array("KaiBanchoo", sprintf("You rolled a %d", rand(1,100)), $user->name, 2));
+                $data = json_encode(array("KaiBancho", sprintf("You rolled a %d", rand(1,100)), $user->name, 2));
                 break;
             default:
-                $data = json_encode(array("KaiBanchoo", sprintf("The command %s doesn't exist", implode(array_map("chr", $command))), $user->name, 2));
+                $data = json_encode(array("KaiBancho", sprintf("The command %s doesn't exist", implode(array_map("chr", $command))), $user->name, 2));
                 break;
         }
         $timestamp = strtotime(Carbon::now());

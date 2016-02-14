@@ -1,6 +1,6 @@
-## KaiBanchoo!web
+## KaiBancho!web
 
-[![Build Status](https://travis-ci.org/Itsyuka/KaiBanchoo-Web.svg)](https://travis-ci.org/Itsyuka/KaiBanchoo-Web)
+[![Build Status](https://travis-ci.org/Itsyuka/KaiBancho-Web.svg)](https://travis-ci.org/Itsyuka/KaiBancho-Web)
 
 A framework I am creating for fun and educational purposes, thus the reason I picked the license. (IMO play osu! on the real servers as it was intended.)
 
@@ -44,7 +44,7 @@ Hosts
 
 ## License
 
-This KaiBanchoo is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International Public License.
+This KaiBancho is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International Public License.
 
 Full license can be found in LICENSE.md
 
@@ -58,7 +58,7 @@ Full license can be found in LICENSE.md
 
 - Osu! is a game developed by Dean "peppy" Herbert, and like all good things, he owns the title, and code.
 
-- KaiBanchoo is based off of the work of Dillon "Itsyuka" Modine-Thuen and HoLLy-HaCKeR's packet method/code.
+- KaiBancho is based off of the work of Dillon "Itsyuka" Modine-Thuen and HoLLy-HaCKeR's packet method/code.
 
 - If you like osu!, play on the real server and maybe drop some cash on there too, believe in the peppy, and the peppy will believe in you, unless you're Cookiezi.
 
