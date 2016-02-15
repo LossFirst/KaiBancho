@@ -28,6 +28,7 @@ Route::group(['middleware' => 'web'], function () {
         return $img->response();
     })->where('user', '[0-9]+');
 
+    Route::get('/w/u/{userid}', 'userProfile@getProfile')->where('userid', '[0-9]+');
     Route::get('/u/{userid}', 'userProfile@getProfile')->where('userid', '[0-9]+');
 
     // Dashboard
@@ -39,8 +40,18 @@ Route::group(['middleware' => 'web'], function () {
     Route::get('/', 'Index@getIndex');
     Route::get('/home', 'HomeController@index');
 });
+Route::get('/w/web/osu-osz2-getscores.php', "Ranking@getScores");
 Route::get('/web/osu-osz2-getscores.php', "Ranking@getScores");
+Route::get('/w/d/{beatmapid}', function($beatmapID) {
+    return redirect(sprintf('http://bloodcat.com/osu/s/%s', $beatmapID));
+})->where('beatmapid', '[0-9]+');
+Route::get('/d/{beatmapid}', function($beatmapID) {
+    return redirect(sprintf('http://bloodcat.com/osu/s/%s', $beatmapID));
+})->where('beatmapid', '[0-9]+');
+Route::post('/w/web/osu-submit-modular.php', "Ranking@submitModular");
+Route::get('/w/web/osu-search.php', "Debug@getSearch");
 Route::post('/web/osu-submit-modular.php', "Ranking@submitModular");
+Route::get('/web/osu-search.php', "Debug@getSearch");
 Route::post('/', 'Index@postIndex');
 Route::get('/{section}', 'Debug@getDebug')->where(['section' => '.*']);
 Route::post('/{section}', 'Debug@postDebug')->where(['section' => '.*']);
