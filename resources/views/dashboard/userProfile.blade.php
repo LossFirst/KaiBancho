@@ -9,7 +9,7 @@
                 <div class="widget-user-header bg-black" style="background: url('http://new.ppy.sh/images/headers/profile-covers/c1.jpg') center center;">
                     <h3 class="widget-user-username"><strong>{{ $user->name }}</strong></h3>
                     <h5 class="widget-user-desc">joined {{ date('F Y', strtotime($user->created_at)) }}</h5>
-                    @if($user->usergroup > 4)
+                    @if($user->usergroup >= 4)
                         <h5 class="widget-user-desc"><span style="color: #FFCC00; font-weight: bold; text-shadow: 2px 0px 11px #FFCC00;">Supporter</span></h5>
                     @endif
                 </div>
