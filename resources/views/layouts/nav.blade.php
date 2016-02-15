@@ -109,8 +109,8 @@
                                     <img src="{{ url("/".Auth::user()->id) }}" class="img-circle" alt="User Image">
 
                                     <p>
-                                        {{ auth()->user()->name }}
-                                        <small>Member since {{ date('F Y', strtotime($user->created_at)) }}</small>
+                                        {{ Auth::user()->name }}
+                                        <small>Member since {{ date('F Y', strtotime(Auth::user()->created_at)) }}</small>
                                     </p>
                                 </li>
                                 <!-- Menu Footer-->
