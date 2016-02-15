@@ -85,10 +85,7 @@ class Index extends Controller
                 $packet->create(64, '#osu'),	//main channel
                 $packet->create(64, '#news'),
                 $packet->create(65, array('#osu', 'Main channel', 2147483647 - 1)),	//secondary channel
-                $packet->create(65, array('#news', 'This will contain announcements and info, while beta lasts.', 1)),
-                $packet->create(65, array('#kfc', 'Kawaii friends club', 0)),	//secondary channel
-                $packet->create(65, array('#aqn', 'cuz fuck yeah', 1337)),
-                $packet->create(07, array('KaiBancho', 'This is a test message! First step to getting chat working!', '#osu', 2))
+                $packet->create(65, array('#news', 'This will contain announcements and info, while beta lasts.', 1))
             );
             $token = $helper->generateToken();
             $player->setToken($token, $user);
