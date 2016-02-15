@@ -37,7 +37,7 @@ class userProfile extends Controller
             }
             return view('dashboard.userProfile', ['user' => $user, 'lastOnline' => $lastOnline, 'rank' => $player->getUserRank($user), 'accuracy' => $player->getAccuracy($user)]);
         } else {
-            return view('dashboard.userProfile');
+            return view('dashboard.doesntExist');
         }
     }
 }
