@@ -39,6 +39,7 @@ class Ranking extends Controller
 
     public function getScores(Request $request)
     {
+        Log::info($request->getQueryString());
         $this->route = Route::getCurrentRoute()->getActionName();
         $checksum = $request->query("c");
         $beatmapID = $request->query("i");
@@ -80,8 +81,8 @@ class Ranking extends Controller
         $helper = new Helper();
         $output = "2|"; //-1 = Not Submitted, 0 = Pending, 1 = unknown, 2 = Ranked, 3 = Approved
         $output .= "false|"; //Need more info
-        $output .= sprintf("%d|", (($beatmap === null) ? 0 : $beatmap->beatmapset_id)); //Beatmap Set ID
         $output .= sprintf("%s|", (($beatmap === null) ? $request->query("i") : $beatmap->beatmap_id)); //Beatmap ID
+        $output .= sprintf("%d|", (($beatmap === null) ? 0 : $beatmap->beatmapset_id)); //Beatmap Set ID
         $output .= sprintf("%d", DB::table('osu_scores')->where('beatmapHash', '=', $request->query("c"))->count()); //How many ranks are in the table for the ID Difficulty Hash
         $output .= "\n";
         $output .= "0"; //Something, idk
@@ -89,6 +90,7 @@ class Ranking extends Controller
         $output .= sprintf("[bold:0,size:20]%s|\n", (($beatmap === null) ?  str_replace(".osu","",$request->query("f")) : $beatmap->title)); //Sets text size and name for viewing
         $output .= "0"; //What is this, its not difficulty, not rating, might as well set to 0
         $output .= "\n";
+        log::info($output);
         $user = User::where('name', $request->query("us"))->first();
         $selfrank = DB::table('osu_scores')->where('user_id', '=', $user->id)->where('beatmapHash', '=', $request->query("c"))->select('id','user_id','score','combo','count50','count100','count300','countMiss','countKatu','countGeki','fc','mods', DB::raw(sprintf("FIND_IN_SET( score, (SELECT GROUP_CONCAT( score ORDER BY score DESC ) FROM osu_scores WHERE beatmapHash = '%s' )) AS rank", $user->id, $request->query("c"))),'created_at')->orderBy('rank','asc')->first();
         if(!is_null($selfrank))
