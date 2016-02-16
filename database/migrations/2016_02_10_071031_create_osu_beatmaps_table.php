@@ -19,6 +19,7 @@ class CreateOsuBeatmapsTable extends Migration
             $table->mediumInteger('beatmap_id');
             $table->string('checksum');
             $table->string('version');
+            $table->string('author');
             $table->string('title');
             $table->string('creator');
             $table->smallInteger('bpm');

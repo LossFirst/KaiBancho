@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\OsuBeatmaps;
 use Illuminate\Http\Request;
 
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
 use Log;
+use DB;
 
 class Debug extends Controller
 {
@@ -20,6 +22,15 @@ class Debug extends Controller
     {
         Log::info(sprintf("Request made to %s", $section));
         return '';
+    }
+
+    public function getSearchID(Request $request)
+    {
+        $beatmap = OsuBeatmaps::where('beatmap_id', $request->query('b'))->first();
+        $output = sprintf("%s.osz|%s|%s|%s|%s|%s|%s|%s|%s|0|0|0|", $beatmap->beatmapset_id, $beatmap->author, $beatmap->title, $beatmap->creator, $beatmap->approved, $beatmap->playmode, $beatmap->created_at, $beatmap->beatmapset_id, $beatmap->beatmap_id);
+        //368148.osz|Tatsh|reunion|Sangzin|-1|0|2016-01-24 21:17:45|368148|377880|0|0|0|
+        Log::info($request->getQueryString());
+        return $output;
     }
 
     public function getSearch(Request $request)

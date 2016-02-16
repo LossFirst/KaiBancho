@@ -57,9 +57,21 @@ class Player {
                 $user = $this->getDatafromID($id);
                 $output = array_merge($output, $packet->create(83, $this->getData($user)));
                 $output = array_merge($output, $packet->create(11, $this->getDataDetailed($user)));
+            } else {
+                $output = array_merge($output, $packet->create(12, $id));
             }
         }
         return $output;
+    }
+
+    public function getStatus($id)
+    {
+
+    }
+
+    public function setStatus($id)
+    {
+
     }
 
     public function isIDOnline($id)

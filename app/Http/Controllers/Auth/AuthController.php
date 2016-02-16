@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\OsuUserStats;
+use App\TaikoUserStats;
+use App\ManiaUserStats;
+use App\CTBUserStats;
 use App\User;
 use Validator;
 use App\Http\Controllers\Controller;
@@ -75,6 +78,9 @@ class AuthController extends Controller
             'avatar' => ""
         ]);
         $user->OsuUserStats()->save(new OsuUserStats(array('level' => 0)));
+        $user->TaikoUserStats()->save(new TaikoUserStats(array('level' => 0)));
+        $user->ManiaUserStats()->save(new ManiaUserStats(array('level' => 0)));
+        $user->CTBUserStats()->save(new CTBUserStats(array('level' => 0)));
         return $user;
     }
 }

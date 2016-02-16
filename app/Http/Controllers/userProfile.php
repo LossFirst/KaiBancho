@@ -13,6 +13,16 @@ use Carbon\Carbon;
 
 class userProfile extends Controller
 {
+    public function getProfileName($username)
+    {
+        $user = User::where('name', $username)->first();
+        if($user === null)
+        {
+            return $this->getProfile(-1);
+        }
+        return $this->getProfile($user->id);
+    }
+
     public function getProfile($userid)
     {
         $user = User::find($userid);

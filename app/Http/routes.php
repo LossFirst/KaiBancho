@@ -30,6 +30,8 @@ Route::group(['middleware' => 'web'], function () {
 
     Route::get('/w/u/{userid}', 'userProfile@getProfile')->where('userid', '[0-9]+');
     Route::get('/u/{userid}', 'userProfile@getProfile')->where('userid', '[0-9]+');
+    Route::get('/u/{username}', 'userProfile@getProfileName')->where('username', '[0-9A-Za-z]+');
+    Route::get('/w/u/{username}', 'userProfile@getProfileName')->where('username', '[0-9A-Za-z]+');
 
     // Dashboard
     Route::get('/dashboard', 'dashboard@index');
@@ -52,6 +54,7 @@ Route::post('/w/web/osu-submit-modular.php', "Ranking@submitModular");
 Route::get('/w/web/osu-search.php', "Debug@getSearch");
 Route::post('/web/osu-submit-modular.php', "Ranking@submitModular");
 Route::get('/web/osu-search.php', "Debug@getSearch");
+Route::get('w/web/osu-search-set.php', 'Debug@getSearchID');
 Route::post('/', 'Index@postIndex');
 Route::get('/{section}', 'Debug@getDebug')->where(['section' => '.*']);
 Route::post('/{section}', 'Debug@postDebug')->where(['section' => '.*']);

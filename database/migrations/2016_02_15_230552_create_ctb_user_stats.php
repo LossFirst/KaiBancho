@@ -3,7 +3,7 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateOsuUserStatsTable extends Migration
+class CreateCtbUserStats extends Migration
 {
     /**
      * Run the migrations.
@@ -12,7 +12,7 @@ class CreateOsuUserStatsTable extends Migration
      */
     public function up()
     {
-        Schema::create('osu_user_stats', function (Blueprint $table) {
+        Schema::create('ctb_user_stats', function (Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->increments('id');
             $table->integer('user_id')->unsigned()->unique('user_id', 'osu_user_stats_user_id');
@@ -41,6 +41,6 @@ class CreateOsuUserStatsTable extends Migration
      */
     public function down()
     {
-        Schema::drop('osu_user_stats');
+        Schema::drop('ctb_user_stats');
     }
 }

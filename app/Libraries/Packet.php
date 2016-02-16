@@ -82,6 +82,7 @@ class Packet {
                 break;
             //int32
             case 5:		//user id
+            case 12:    //despawn user panel
             case 18:   //spectator replay data?
             case 71:	//user rank
             case 75: 	//cho protocol
@@ -113,21 +114,27 @@ class Packet {
                     {
                         $output = $this->create(11 ,$player->getDataDetailed($player->getDatafromID($userID)));
                     }
+                    $enabled = true;
+                    if($enabled)
+                    {
+                        $stuff = array();
+                        $format = 'CPacket/x2/CLength/x3/CStatus/x/CSongLength';
+                        $stuff = array_merge($stuff, unpack($format, $body));
+                        $format = sprintf('@10/A%dSongName/x/CSongChecksumLength', $stuff['SongLength']);
+                        $stuff = array_merge($stuff, unpack($format, $body));
+                        $format = sprintf('@%d/x2/A%dSongChecksum', 10+(integer)$stuff['SongLength'], $stuff['SongChecksumLength']);
+                        $stuff = array_merge($stuff, unpack($format, $body));
+                        $format = sprintf('@%d/x2/CMode/CThingOne/CThingTwo', $stuff['Length']);
+                        $stuff = array_merge($stuff, unpack($format, $body));
+                        log::info($stuff);
+                    }
                     break;
                 case 1: //Chat message
                     $messageData = array();
-                    $format = 'CPacket/'.
-                        'x2/'.
-                        'CLength/'.
-                        'x6/'.
-                        'CMessageLength';
+                    $format = 'CPacket/x2/CLength/x6/CMessageLength';
                     $headerData = unpack($format, $body);
                     $messageData = array_merge($messageData, $headerData);
-                    $format = '@12/X/'.
-                        sprintf('A%dMessage/', $headerData['MessageLength']).
-                        'x/'.
-                        'CChannelLength/'.
-                        'A*Channel';
+                    $format = sprintf('@12/X/A%dMessage/x/CChannelLength/A*Channel', $headerData['MessageLength']);
                     $bodyData = unpack($format, $body);
                     $messageData = array_merge($messageData, $bodyData);
 
@@ -151,20 +158,10 @@ class Packet {
                     break;
                 case 25: //Private Message
                     $messageData = array();
-                    $format = 'CPacket/'.
-                        'x2/'.
-                        'CLength/'. //Length from 4th key from array
-                        'x6/'.
-                        'CMessageLength';
-                    $headerData = unpack($format, $body);
-                    $messageData = array_merge($messageData, $headerData);
-                    $format = '@12/X/'.
-                        sprintf('A%dMessage/', $headerData['MessageLength']).
-                        'x/'.
-                        'CChannelLength/'.
-                        'A*Channel';
-                    $bodyData = unpack($format, $body);
-                    $messageData = array_merge($messageData, $bodyData);
+                    $format = 'CPacket/x2/CLength/x6/CMessageLength';
+                    $messageData = array_merge($messageData, unpack($format, $body));
+                    $format = sprintf('@12/X/A%dMessage/x/CChannelLength/A*Channel', $messageData['MessageLength']);
+                    $messageData = array_merge($messageData, unpack($format, $body));
 
                     $message = new RedisMessage();
                     $message->SendMessage($player->getDatafromID($userID), $messageData);
@@ -179,11 +176,7 @@ class Packet {
                     break;
                 case 63: //Join Channel
                     $ChannelData = array();
-                    $format = 'CPacket/'.
-                        'x2/'.
-                        'CHeaderLength/'.
-                        'x4/'.
-                        'CChannelLength';
+                    $format = 'CPacket/x2/CHeaderLength/x4/CChannelLength';
                     $ChannelData = array_merge($ChannelData, unpack($format, $body));
                     $format = '@9/'.sprintf('A%dChannel',$ChannelData['ChannelLength']);
                     $ChannelData = array_merge($ChannelData, unpack($format, $body));
@@ -197,19 +190,15 @@ class Packet {
                     break;
                 case 78: //Remove channel
                     $ChannelData = array();
-                    $format = 'CPacket/'.
-                        'x2/'.
-                        'CHeaderLength/'.
-                        'x4/'.
-                        'CChannelLength';
+                    $format = 'CPacket/x2/CHeaderLength/x4/CChannelLength';
                     $ChannelData = array_merge($ChannelData, unpack($format, $body));
-                    $format = '@9/'.sprintf('A%dChannel',$ChannelData['ChannelLength']);
+                    $format = sprintf('@9/A%dChannel',$ChannelData['ChannelLength']);
                     $ChannelData = array_merge($ChannelData, unpack($format, $body));
 
                     $output = $this->create(66, $ChannelData['Channel']);
                     break;
                 case 79: //Gets all users online
-                    //$output = $player->getOnline();
+                    $output = $player->getOnline();
                     break;
                 case 85: //Updates all users, also checks if they are online (I assume)
                     $output = $player->getOnline();

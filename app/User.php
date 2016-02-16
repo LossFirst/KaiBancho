@@ -28,4 +28,19 @@ class User extends Authenticatable
     {
         return $this->hasOne('App\OsuUserStats');
     }
+
+    public function TaikoUserStats()
+    {
+        return $this->hasOne('App\TaikoUserStats');
+    }
+
+    public function ManiaUserStats()
+    {
+        return $this->hasOne('App\ManiaUserStats');
+    }
+
+    public function CTBUserStats()
+    {
+        return $this->hasOne('App\CTBUserStats');
+    }
 }
