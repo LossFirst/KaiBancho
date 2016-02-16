@@ -44,15 +44,7 @@ Hosts
 
 ## License
 
-This KaiBancho is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International Public License.
-
-Full license can be found in LICENSE.md
-
-### Short Form
-
-- Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
-- NonCommercial — You may not use the material for commercial purposes.
-- ShareAlike — If you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.
+KaiBancho!Web (KaiBancho) is licensed under AGPL version 3 or later. Please see [the licence file](LICENCE) for more information. [tl;dr](https://tldrlegal.com/license/gnu-affero-general-public-license-v3-(agpl-3.0)) if you want to use any code, design or artwork from this project, attribute it and make your project open source under the same licence.
 
 ## Credit/Other things
 
