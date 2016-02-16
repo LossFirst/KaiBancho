@@ -66,12 +66,16 @@ class Player {
 
     public function getStatus($id)
     {
-
+        $redis = Redis::connection();
+        $data = $redis->get(sprintf("UserStatus:%d",$id));
+        return json_decode($data, true);
     }
 
-    public function setStatus($id)
+    public function setStatus($id, $data)
     {
-
+        $redis = Redis::connection();
+        $redis->set(sprintf("UserStatus:%d", $id), json_encode($data));
+        $redis->expire(sprintf("UserStatus:%d", $id), (60 * 5));
     }
 
     public function isIDOnline($id)
@@ -131,13 +135,23 @@ class Player {
 
     public function getDataDetailed($player)
     {
+        $status = $this->getStatus($player->id);
+        if(empty($status))
+        {
+            $status = array(
+            'SongName' => '',
+            'SongChecksum' => '',
+            'Mode' => 0,
+            'Status' => 1);
+        }
+        Log::info($status);
         return array(		//more local player data
             'id' => $player->id,
-            'bStatus' => 0,		//byte
-            'string0' => '',	//String
-            'string1' => '',	//string
+            'bStatus' => $status['Status'],		//byte
+            'string0' => $status['SongName'],	//String
+            'string1' => $status['SongChecksum'],	//string
             'mods' => 0,		//int
-            'playmode' => 0,	//byte
+            'playmode' => $status['Mode'],	//byte
             'int0' => 0,		//int
             'score' => $player->OsuUserStats->ranked_score,			//long 	score
             'accuracy' => $this->getAccuracy($player),	//float accuracy

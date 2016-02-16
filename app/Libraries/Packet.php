@@ -110,24 +110,17 @@ class Packet {
             $packetNum = unpack('C', $body);
             switch ($packetNum[1]) {
                 case 0: //Update local player
-                    if($data[4] == 14) //Using length for default update for player
-                    {
-                        $output = $this->create(11 ,$player->getDataDetailed($player->getDatafromID($userID)));
-                    }
-                    $enabled = true;
-                    if($enabled)
-                    {
-                        $stuff = array();
-                        $format = 'CPacket/x2/CLength/x3/CStatus/x/CSongLength';
-                        $stuff = array_merge($stuff, unpack($format, $body));
-                        $format = sprintf('@10/A%dSongName/x/CSongChecksumLength', $stuff['SongLength']);
-                        $stuff = array_merge($stuff, unpack($format, $body));
-                        $format = sprintf('@%d/x2/A%dSongChecksum', 10+(integer)$stuff['SongLength'], $stuff['SongChecksumLength']);
-                        $stuff = array_merge($stuff, unpack($format, $body));
-                        $format = sprintf('@%d/x2/CMode/CThingOne/CThingTwo', $stuff['Length']);
-                        $stuff = array_merge($stuff, unpack($format, $body));
-                        log::info($stuff);
-                    }
+                    $stuff = array();
+                    $format = 'CPacket/x2/CLength/x3/CStatus/x/CSongLength';
+                    $stuff = array_merge($stuff, unpack($format, $body));
+                    $format = sprintf('@10/A%dSongName/x/CSongChecksumLength', $stuff['SongLength']);
+                    $stuff = array_merge($stuff, unpack($format, $body));
+                    $format = sprintf('@%d/x2/A%dSongChecksum', 10+(integer)$stuff['SongLength'], $stuff['SongChecksumLength']);
+                    $stuff = array_merge($stuff, unpack($format, $body));
+                    $format = sprintf('@%d/x2/CMode/CThingOne/CThingTwo', $stuff['Length']);
+                    $stuff = array_merge($stuff, unpack($format, $body));
+                    $player->setStatus($userID, $stuff);
+                    $output = $this->create(11 ,$player->getDataDetailed($player->getDatafromID($userID)));
                     break;
                 case 1: //Chat message
                     $messageData = array();
