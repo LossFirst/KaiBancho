@@ -144,7 +144,6 @@ class Player {
             'Mode' => 0,
             'Status' => 1);
         }
-        Log::info($status);
         return array(		//more local player data
             'id' => $player->id,
             'bStatus' => $status['Status'],		//byte
