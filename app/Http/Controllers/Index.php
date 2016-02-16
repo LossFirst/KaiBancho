@@ -57,7 +57,7 @@ class Index extends Controller
         $this->route = sprintf('%s packet %s', Route::getCurrentRoute()->getActionName(), unpack('C',$body)[1]);
         //$packet->debug($body);
         $output = $packet->check($body, $userID, $osutoken);
-        return response()->make($output)->withHeaders(['cho-protocol' => config('bancho.ProtocolVersion'), 'cho-token' => $osutoken, 'Connection' => 'Keep-Alive']);
+        return response()->make($output)->withHeaders(['cho-protocol' => config('bancho.ProtocolVersion'), 'cho-token' => $osutoken]);
     }
 
     function loginFunction($username, $hash)
@@ -93,7 +93,7 @@ class Index extends Controller
         } else {
             Log::info($username . " has failed to logged in");
         }
-        return response()->make(implode(array_map("chr", $output)))->withHeaders(array_merge(['cho-protocol' => config('bancho.ProtocolVersion'), 'Connection' => 'Keep-Alive'], $headers));
+        return response()->make(implode(array_map("chr", $output)))->withHeaders(array_merge(['cho-protocol' => config('bancho.ProtocolVersion')], $headers));
     }
 
 }
