@@ -28,15 +28,11 @@ class Debug extends Controller
     {
         $beatmap = OsuBeatmaps::where('beatmap_id', $request->query('b'))->first();
         $output = sprintf("%s.osz|%s|%s|%s|%s|%s|%s|%s|%s|0|0|0|", $beatmap->beatmapset_id, $beatmap->author, $beatmap->title, $beatmap->creator, $beatmap->approved, $beatmap->playmode, $beatmap->created_at, $beatmap->beatmapset_id, $beatmap->beatmap_id);
-        //368148.osz|Tatsh|reunion|Sangzin|-1|0|2016-01-24 21:17:45|368148|377880|0|0|0|
-        Log::info($request->getQueryString());
         return $output;
     }
 
     public function getSearch(Request $request)
     {
-        Log::info("Search was called");
-        Log::info($request->getQueryString());
         $query = "101
             405053.osz|Azusa Tadokoro|Junshin Always|Shad0w1and|1|9.27419|2016-02-08T02:56:07.000Z|405053|409296|1|0|0||Advanced@0,Lami's Extra@0,Little's Insane@0,Normal@0,StarR's Extra@0,ZZHBOY's Hard@0,Extra@0,Aerous' Extra@0
             180191.osz|T-ara|No.9|Tony|1|9.375|2016-02-07T19:16:29.000Z|180191|213454|1|0|0||Hard@0,Normal@0,Gabe's Easy@0

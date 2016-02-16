@@ -14,12 +14,12 @@ A framework I am creating for fun and educational purposes, thus the reason I pi
 - [X] Chat
 - [X] Private Message
 - [X] Avatar
-- [X] Online user list (Mostly working, needs to clear list after logout)
+- [X] Online user list
 - [X] Packet Receiving
 - [ ] Spectating
 - [X] PP (Super simple, needs to be extended)
 - [X] Global Ranks
-- [ ] Country Ranks
+- [ ] Country Ranks (Fairly easy to do now)
 - [X] Accuracy
 
 
