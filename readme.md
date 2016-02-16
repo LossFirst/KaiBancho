@@ -42,7 +42,7 @@ Hosts
 192.168.10.10 c1.ppy.sh
 ```
 
-## License
+## Licence
 
 KaiBancho!Web (KaiBancho) is licensed under AGPL version 3 or later. Please see [the licence file](LICENCE) for more information. [tl;dr](https://tldrlegal.com/license/gnu-affero-general-public-license-v3-(agpl-3.0)) if you want to use any code, design or artwork from this project, attribute it and make your project open source under the same licence.
 
