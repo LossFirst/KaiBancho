@@ -120,11 +120,30 @@ class Player {
         );
     }
 
-    public function getUserRank($player)
+    public function getUserRank($player, $mode = 0)
     {
-        if($player->OsuUserStats->pp > 0) {
+        switch($mode)
+        {
+            case 0:
+                $data = $player->OsuUserStats;
+                $table = 'osu_user_stats';
+                break;
+            case 1:
+                $data = $player->TaikoUserStats;
+                $table = 'taiko_user_stats';
+                break;
+            case 2:
+                $data = $player->CTBUserStats;
+                $table = 'ctb_user_stats';
+                break;
+            case 3:
+                $data = $player->ManiaUserStats;
+                $table = 'mania_user_stats';
+                break;
+        }
+        if($data->pp > 0) {
             $rank = DB::table('osu_user_stats')
-                ->select(DB::raw('FIND_IN_SET( pp, (SELECT GROUP_CONCAT( pp ORDER BY pp DESC ) FROM osu_user_stats )) AS rank'))
+                ->select(DB::raw(sprintf('FIND_IN_SET( pp, (SELECT GROUP_CONCAT( pp ORDER BY pp DESC ) FROM %s )) AS rank', $table)))
                 ->where('user_id', '=', $player->id)
                 ->orderBy('rank', 'asc')
                 ->first();
@@ -144,6 +163,21 @@ class Player {
             'Mode' => 0,
             'Status' => 1);
         }
+        switch($status['Mode'])
+        {
+            case 0:
+                $data = $player->OsuUserStats;
+                break;
+            case 1:
+                $data = $player->TaikoUserStats;
+                break;
+            case 2:
+                $data = $player->CTBUserStats;
+                break;
+            case 3:
+                $data = $player->ManiaUserStats;
+                break;
+        }
         return array(		//more local player data
             'id' => $player->id,
             'bStatus' => $status['Status'],		//byte
@@ -152,12 +186,12 @@ class Player {
             'mods' => 0,		//int
             'playmode' => $status['Mode'],	//byte
             'int0' => 0,		//int
-            'score' => $player->OsuUserStats->ranked_score,			//long 	score
-            'accuracy' => $this->getAccuracy($player),	//float accuracy
-            'playcount' => $player->OsuUserStats->playcount,			//int playcount
-            'experience' => $player->OsuUserStats->total_score,			//long 	experience
-            'int1' => $this->getUserRank($player),	//int 	global rank?
-            'pp' => $player->OsuUserStats->pp,			//short	pp 				if set, will use?
+            'score' => $data->ranked_score,			//long 	score
+            'accuracy' => $this->getAccuracy($player, $status['Mode']),	//float accuracy
+            'playcount' => $data->playcount,			//int playcount
+            'experience' => $data->total_score,			//long 	experience
+            'int1' => $this->getUserRank($player, $status['Mode']),	//int 	global rank?
+            'pp' => $data->pp,			//short	pp 				if set, will use?
         );
     }
 
@@ -330,10 +364,25 @@ class Player {
         return $level;
     }
 
-    public function getAccuracy($player)
+    public function getAccuracy($player, $mode = 0)
     {
-        $totalHits = ($player->OsuUserStats->count50 + $player->OsuUserStats->count100 + $player->OsuUserStats->count300 + $player->OsuUserStats->countmiss) * 300;
-        $hits = $player->OsuUserStats->count50 * 50 + $player->OsuUserStats->count100 * 100 + $player->OsuUserStats->count300 * 300;
+        switch($mode)
+        {
+            case 0:
+                $data = $player->OsuUserStats;
+                break;
+            case 1:
+                $data = $player->TaikoUserStats;
+                break;
+            case 2:
+                $data = $player->CTBUserStats;
+                break;
+            case 3:
+                $data = $player->ManiaUserStats;
+                break;
+        }
+        $totalHits = ($data->count50 + $data->count100 + $data->count300 + $data->countmiss) * 300;
+        $hits = $data->count50 * 50 + $data->count100 * 100 + $data->count300 * 300;
         if($hits && $totalHits != 0) {
             return $hits / $totalHits;
         } else {
