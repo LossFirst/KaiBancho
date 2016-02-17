@@ -83,7 +83,7 @@ class Packet {
             //int32
             case 5:		//user id
             case 12:    //despawn user panel
-            case 18:   //spectator replay data?
+            case 16:   //spectator replay data?
             case 71:	//user rank
             case 75: 	//cho protocol
             case 92:	//ban status
