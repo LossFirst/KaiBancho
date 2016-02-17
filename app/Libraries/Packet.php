@@ -147,7 +147,7 @@ class Packet {
                     break;
                 case 17: //TODO: Spectating (Stop spectating)
                     break;
-                case 18: //TODO: Spectating (Multiple users spectating)
+                case 18: //TODO: Spectating (Spectator frames sent when a user trys to spectate or when someone starts playing a beatmap?)
                     break;
                 case 25: //Private Message
                     $messageData = array();
