@@ -158,7 +158,12 @@ class Packet {
                     $ChannelData = array_merge($ChannelData, unpack($format, $body));
                     $format = sprintf('@9/A%dChannel',$ChannelData['ChannelLength']);
                     $ChannelData = array_merge($ChannelData, unpack($format, $body));
-                    $output = $this->create(64, $ChannelData['Channel']);
+                    if($ChannelData['ChannelLength'] > 1 && $ChannelData['ChannelLength'] < 32 && strchr($ChannelData['Channel'], " ") === false)
+                    {
+                        $output = $this->create(Packets::OUT_ChannelJoined, $ChannelData['Channel']);
+                    } else {
+                        $output = $this->create(Packets::OUT_ChannelDeny, $ChannelData['Channel']);
+                    }
                     break;
                 case Packets::UK0068: //Some thing to do with checking beatmaps at start? (Yea, we won't touch this, looks like it'll be too much (up to 4000+ lines))
                     break;
@@ -171,7 +176,7 @@ class Packet {
                     $ChannelData = array_merge($ChannelData, unpack($format, $body));
                     $format = sprintf('@9/A%dChannel',$ChannelData['ChannelLength']);
                     $ChannelData = array_merge($ChannelData, unpack($format, $body));
-                    $output = $this->create(66, $ChannelData['Channel']);
+                    $output = $this->create(Packets::OUT_ChannelDeny, $ChannelData['Channel']);
                     break;
                 case Packets::IN_OnlinePlayers:
                     $output = $player->getOnline();

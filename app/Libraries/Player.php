@@ -44,7 +44,7 @@ class Player {
         foreach($ids as $id) {
             array_push($userIDArray, $id);
         }
-        $output = $packet->create(96, $userIDArray);
+        $output = $packet->create(Packets::OUT_OnlineList, $userIDArray);
         return $output;
     }
 
@@ -55,10 +55,10 @@ class Player {
         foreach($ids as $id) {
             if($this->isIDOnline($id)) {
                 $user = $this->getDatafromID($id);
-                $output = array_merge($output, $packet->create(83, $this->getData($user)));
-                $output = array_merge($output, $packet->create(11, $this->getDataDetailed($user)));
+                $output = array_merge($output, $packet->create(Packets::OUT_PlayerLocaleInfo, $this->getData($user)));
+                $output = array_merge($output, $packet->create(Packets::OUT_PlayerStatsUpdate, $this->getDataDetailed($user)));
             } else {
-                $output = array_merge($output, $packet->create(12, $id));
+                $output = array_merge($output, $packet->create(Packets::OUT_PlayerPanelDespawn, $id));
             }
         }
         return $output;

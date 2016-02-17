@@ -18,7 +18,7 @@ class RedisMessage
         {
             foreach($values as $value)
             {
-                $chatMessage = array_merge($chatMessage, $packet->create(07, json_decode($redis->get($value))));
+                $chatMessage = array_merge($chatMessage, $packet->create(Packets::OUT_SendChatMSG, json_decode($redis->get($value))));
             }
             $redis->del($values);
         }
@@ -28,13 +28,18 @@ class RedisMessage
     public function SendMessage($user, $messageData)
     {
         $redis = Redis::connection();
-        $packet = new Packet();
         $player = new Player();
 
         $timestamp = strtotime(Carbon::now());
         $random = rand(1,1000);
+        $isChannel = strpos($messageData['Channel'],'#');
+        if(substr($messageData['Message'], 0, 1) == "!")
+        {
+            $this->command($messageData['Message'], $user, ($isChannel === false) ? null : $messageData['Channel']);
+            return true;
+        }
 
-        if(strpos($messageData['Channel'],'#') === false)
+        if($isChannel === false)
         {
             $toUser = $player->getDataFromName($messageData['Channel']);
             $redis->set(sprintf("chat:%d:%d:%s", $toUser->id, $random, $timestamp), json_encode(array($user->name, $messageData['Message'], $messageData['Channel'], $user->id)));
@@ -52,9 +57,9 @@ class RedisMessage
         return true;
     }
 
-    public function isCommand($messageArray)
+    public function isCommand($message)
     {
-        if($messageArray[0] == 33)
+        if(substr($message, 0) == "!")
         {
             return true;
         } else {
@@ -62,31 +67,23 @@ class RedisMessage
         }
     }
 
-    public function command($messageArray, $user)
+    public function command($message, $user, $channel)
     {
-        $redis = Redis::connection();
-        $command = array();
-        foreach($messageArray as $item)
-        {
-            if($item != 32)
-            {
-                array_push($command, $item);
-            }
-        }
-
-        switch(implode(array_map("chr", $command)))
+        $command = explode(' ', $message);
+        $returnTo = (is_null($channel)) ? $user->name : $channel ;
+        $return = array('Channel' => $returnTo);
+        switch($command[0])
         {
             case "!roll":
-                $data = json_encode(array("KaiBancho", sprintf("You rolled a %d", rand(1,100)), $user->name, 2));
+                $data = sprintf("You rolled a %d", rand(1, (array_key_exists(1 ,$command) && (strlen((string)intval($command[1]))) > 1) ? intval($command[1]) : 100));
+                $return = array_merge($return, array('Message' => $data));
+                $this->SendMessage((object)array('id' => -1, 'name' => 'KaiBancho'), $return);
                 break;
             default:
-                $data = json_encode(array("KaiBancho", sprintf("The command %s doesn't exist", implode(array_map("chr", $command))), $user->name, 2));
+                $data = sprintf("The command %s doesn't exist", $command[0]);
+                $return = array_merge($return, array('Message' => $data));
+                $this->SendMessage((object)array('id' => -1, 'name' => 'KaiBancho'), $return);
                 break;
         }
-        $timestamp = strtotime(Carbon::now());
-        $random = rand(1,1000);
-        $redis->set(sprintf("chat:%d:%d:%s", $user->id, $random, $timestamp), $data);
-        $redis->expire(sprintf("chat:%d:%d:%s", $user->id, $random, $timestamp), 30);
-        return array();
     }
 }
