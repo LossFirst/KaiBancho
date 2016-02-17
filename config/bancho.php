@@ -6,4 +6,5 @@ return [
     'decryptionKey' => "h89f2-890h2h89b34g-h80g134n90133",
     'osuAPIKey' => env('OSUAPI', ""),
     'ProtocolVersion' => 19,
+    'whitelistVersions' => array('b20151228.3'),
 ];

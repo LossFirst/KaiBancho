@@ -9,8 +9,8 @@ use App\Http\Requests;
 use App\Http\Controllers\Controller;
 use Log;
 use Auth;
-use Response;
 use App\Libraries\Packet as Packet;
+use App\Libraries\Packets as Packets;
 use App\Libraries\Helper as Helper;
 use App\Libraries\Player as Player;
 
@@ -71,21 +71,19 @@ class Index extends Controller
             $player = new Player();
             $user = Auth::user();
             Log::info($username . " has logged in");
-
+            $player->setStatus($user->id, array('SongName' => '', 'SongChecksum' => '', 'Mode' => 0, 'Status' => 0));
             $output = array_merge(
-                $packet->create(92, $user->bantime),	//ban status/time
-                $packet->create(5, $user->id),	//user id
-                $packet->create(75, config('bancho.ProtocolVersion')),	//bancho protocol version
-                $packet->create(71, $user->usergroup),	//user rank (supporter etc)
+                $packet->create(Packets::OUT_BanStatus, $user->bantime),
+                $packet->create(Packets::OUT_LoginRequest, $user->id),
+                $packet->create(Packets::OUT_Protocol, config('bancho.ProtocolVersion')),
+                $packet->create(Packets::OUT_UserGroup, $user->usergroup),
                 //$packet->create(72, array(3, 4)),	//friend list
-                $packet->create(83, $player->getData($user)),
-                $packet->create(11, $player->getDataDetailed($user)),
-                $packet->create(89, null),
-                //foreach player online, packet 12 or 95
-                $packet->create(64, '#osu'),	//main channel
-                $packet->create(64, '#news'),
-                $packet->create(65, array('#osu', 'Main channel', 2147483647 - 1)),	//secondary channel
-                $packet->create(65, array('#news', 'This will contain announcements and info, while beta lasts.', 1))
+                $packet->create(Packets::OUT_PlayerLocaleInfo, $player->getData($user)),
+                $packet->create(Packets::OUT_ChannelsLoaded, null),
+                $packet->create(Packets::OUT_ChannelJoined, '#osu'),
+                $packet->create(Packets::OUT_ChannelJoined, '#news'),
+                $packet->create(Packets::OUT_ChannelList, array('#osu', 'Main channel', 2147483647 - 1)),
+                $packet->create(Packets::OUT_ChannelList, array('#news', 'This will contain announcements and info, while beta lasts.', 1))
             );
             $token = $helper->generateToken();
             $player->setToken($token, $user);
