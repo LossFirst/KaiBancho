@@ -11,6 +11,7 @@ class Packet {
             case Packets::OUT_OrangeNotification:
             case Packets::OUT_ChannelJoined:
             case Packets::OUT_ChannelDeny:
+            case Packets::ServerSwitch:
             case Packets::OUT_BlackScreenNotification:
                 $toreturn = $helper->ULeb128($data);
                 break;
