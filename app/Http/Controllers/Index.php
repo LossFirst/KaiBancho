@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\UserFriends;
 use Illuminate\Http\Request;
 use Route;
 
@@ -77,7 +78,7 @@ class Index extends Controller
                 $packet->create(Packets::OUT_LoginRequest, $user->id),
                 $packet->create(Packets::OUT_Protocol, config('bancho.ProtocolVersion')),
                 $packet->create(Packets::OUT_UserGroup, $user->usergroup),
-                //$packet->create(72, array(3, 4)),	//friend list
+                $packet->create(Packets::OUT_UserFriends, $player->getFriends($user->id)),	//friend list
                 $packet->create(Packets::OUT_PlayerLocaleInfo, $player->getData($user)),
                 $packet->create(Packets::OUT_ChannelsLoaded, null),
                 $packet->create(Packets::OUT_ChannelJoined, '#osu'),

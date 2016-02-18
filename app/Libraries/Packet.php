@@ -132,7 +132,7 @@ class Packet {
                     break;
                 case Packets::IN_KeepAlive:
                     $message = new RedisMessage();
-                    $output = $message->GetMessage($userID);
+                    $output = array_merge($message->GetMessage($userID), $player->getOnline());
                     break;
                 case Packets::IN_StartSpectating:
                 case Packets::IN_StopSpectating:
@@ -169,7 +169,12 @@ class Packet {
                 case Packets::UK0068: //Some thing to do with checking beatmaps at start? (Yea, we won't touch this, looks like it'll be too much (up to 4000+ lines))
                     break;
                 case Packets::IN_AddFriend:
+                    $friend = unpack('x7/C', $body);
+                    $player->addFriend($userID, $friend[1]);
+                    break;
                 case Packets::IN_RemoveFriend:
+                    $exfriend = unpack('x7/C', $body);
+                    $player->removeFriend($userID, $exfriend[1]);
                     break;
                 case Packets::IN_LeaveChannel:
                     $ChannelData = array();

@@ -3,6 +3,7 @@
 namespace App\Libraries;
 
 use App\User;
+use App\UserFriends;
 use Log;
 use DB;
 use Redis;
@@ -42,7 +43,9 @@ class Player {
         $userIDArray = array();
         $ids = $this->getAllIDs($this->getAllTokens());
         foreach($ids as $id) {
-            array_push($userIDArray, $id);
+            if($this->isIDOnline($id)) {
+                array_push($userIDArray, $id);
+            }
         }
         $output = $packet->create(Packets::OUT_OnlineList, $userIDArray);
         return $output;
@@ -64,11 +67,33 @@ class Player {
         return $output;
     }
 
+    public function getFriends($id)
+    {
+        $friends = UserFriends::where('user_id', $id)->get();
+        $friendsList = array();
+        foreach($friends as $friend)
+        {
+            array_push($friendsList, $friend->friended_id);
+        }
+        return $friendsList;
+    }
+
     public function getStatus($id)
     {
         $redis = Redis::connection();
         $data = $redis->get(sprintf("UserStatus:%d",$id));
         return json_decode($data, true);
+    }
+
+    public function addFriend($userid, $friendid)
+    {
+        UserFriends::create(['user_id' => $userid, 'friended_id' => $friendid])->save();
+    }
+
+    public function removeFriend($userid, $exfriendid)
+    {
+        $friend = UserFriends::where('user_id', $userid)->where('friended_id', $exfriendid)->first();
+        $friend->delete();
     }
 
     public function setStatus($id, $data)
