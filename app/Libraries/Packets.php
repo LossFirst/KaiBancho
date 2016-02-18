@@ -112,7 +112,7 @@ class Packets
     const OUT_Restricted = 104;
     const OUT_BlackScreenNotification = 105;
     const UK0106 = 106;
-    const UK0107 = 107;
+    const OUT_ServerSwitch = 107;
     const UK0108 = 108;
     const UK0109 = 109;
 }
