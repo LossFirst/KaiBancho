@@ -46,7 +46,7 @@ Hosts
 
 If you would like to talk about KaiBancho join our Discord.
 
-https://discord.gg/0q2Z33UAJdbGLUEM
+<iframe src="https://discordapp.com/widget?id=150270095573123072&theme=dark" width="350" height="500" allowtransparency="true" frameborder="0"></iframe>
 
 ## Licence
 
