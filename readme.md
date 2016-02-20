@@ -1,6 +1,6 @@
 ## KaiBancho!web
 
-[![Build Status](https://travis-ci.org/Itsyuka/KaiBancho.svg)](https://travis-ci.org/Itsyuka/KaiBancho)
+[![Build Status](https://travis-ci.org/Itsyuka/KaiBancho.svg)](https://travis-ci.org/Itsyuka/KaiBancho) [![AGPL V3 Licence](https://img.shields.io/badge/license-AGPL%20V3-blue.svg)](LICENCE) [![Discord](https://img.shields.io/badge/chat-Discord-blue.svg)](https://discord.gg/0q2Z33UAJdbGLUEM)
 
 A framework I am creating for fun and educational purposes, thus the reason I picked the license. (IMO play osu! on the real servers as it was intended.)
 
@@ -42,11 +42,6 @@ Hosts
 192.168.10.10 c1.ppy.sh
 ```
 
-## Discord
-
-If you would like to talk about KaiBancho join our Discord.
-
-https://discord.gg/0q2Z33UAJdbGLUEM
 
 ## Licence
 
