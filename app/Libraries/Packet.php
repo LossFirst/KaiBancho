@@ -113,14 +113,15 @@ class Packet {
                     $stuff = array_merge($stuff, unpack($format, $body));
                     $player->setStatus($userID, $stuff);
                     break;
+                case Packets::IN_ReceivePM:
                 case Packets::IN_RecieveChatMSG: //Chat message
                     $messageData = array();
                     $format = 'CPacket/x2/CLength/x6/CMessageLength';
-                    $headerData = unpack($format, $body);
-                    $messageData = array_merge($messageData, $headerData);
-                    $format = sprintf('@12/X/A%dMessage/x/CChannelLength/A*Channel', $headerData['MessageLength']);
-                    $bodyData = unpack($format, $body);
-                    $messageData = array_merge($messageData, $bodyData);
+                    $messageData = array_merge($messageData, unpack($format, $body));
+                    $format = sprintf('@12/X/A%dMessage/x/CChannelLength/A*Channel',$messageData['MessageLength']);
+                    $messageData = array_merge($messageData, unpack($format, $body));
+                    $format = sprintf('@%d/A%dChannel', 13+$messageData['MessageLength'], $messageData['ChannelLength']);
+                    $messageData = array_merge($messageData, unpack($format, $body));
                     $message = new RedisMessage();
                     $message->SendMessage($player->getDatafromID($userID), $messageData);
                     break;
@@ -137,15 +138,6 @@ class Packet {
                 case Packets::IN_StartSpectating:
                 case Packets::IN_StopSpectating:
                 case Packets::IN_SpectatingData:
-                    break;
-                case Packets::IN_ReceivePM:
-                    $messageData = array();
-                    $format = 'CPacket/x2/CLength/x6/CMessageLength';
-                    $messageData = array_merge($messageData, unpack($format, $body));
-                    $format = sprintf('@12/X/A%dMessage/x/CChannelLength/A*Channel', $messageData['MessageLength']);
-                    $messageData = array_merge($messageData, unpack($format, $body));
-                    $message = new RedisMessage();
-                    $message->SendMessage($player->getDatafromID($userID), $messageData);
                     break;
                 case Packets::IN_MPLeave:
                 case Packets::IN_MPJoin:

@@ -30,8 +30,7 @@ class RedisMessage
         $redis = Redis::connection();
         $player = new Player();
 
-        $timestamp = strtotime(Carbon::now());
-        $random = rand(1,1000);
+        $timestamp = $this->getTimestamp(true);
         $isChannel = strpos($messageData['Channel'],'#');
         if(substr($messageData['Message'], 0, 1) == "!")
         {
@@ -42,22 +41,32 @@ class RedisMessage
         if($isChannel === false)
         {
             $toUser = $player->getDataFromName($messageData['Channel']);
-            $redis->set(sprintf("chat:%d:%d:%s", $toUser->id, $random, $timestamp), json_encode(array($user->name, $messageData['Message'], $messageData['Channel'], $user->id)));
-            $redis->expire(sprintf("chat:%d:%d:%s", $toUser->id, $random, $timestamp), 30);
+            $redis->set(sprintf("chat:%d:%s", $toUser->id, $timestamp), json_encode(array($user->name, $messageData['Message'], $messageData['Channel'], $user->id)));
+            $redis->expire(sprintf("chat:%d:%s", $toUser->id, $timestamp), 30);
             return true;
         }
 
         foreach($player->getAllIDs($player->getAllTokens()) as $id)
         {
             if($id != $user->id) {
-                $redis->set(sprintf("chat:%d:%d:%s", $id, $random, $timestamp), json_encode(array($user->name, $messageData['Message'], $messageData['Channel'], $user->id)));
-                $redis->expire(sprintf("chat:%d:%d:%s", $id, $random, $timestamp), 30);
+                $redis->set(sprintf("chat:%d:%s", $id, $timestamp), json_encode(array($user->name, $messageData['Message'], $messageData['Channel'], $user->id)));
+                $redis->expire(sprintf("chat:%d:%s", $id, $timestamp), 30);
             }
         }
         return true;
     }
 
-    public function isCommand($message)
+    function getTimestamp($asString=false){
+        $seconds = microtime(true); // false = int, true = float
+        $stamp = round($seconds * 10000);
+        if($asString == true){
+            return sprintf('%.0f', $stamp);
+        } else {
+            return $stamp;
+        }
+    }
+
+    function isCommand($message)
     {
         if(substr($message, 0) == "!")
         {
@@ -67,7 +76,7 @@ class RedisMessage
         }
     }
 
-    public function command($message, $user, $channel)
+    function command($message, $user, $channel)
     {
         $command = explode(' ', $message);
         $returnTo = (is_null($channel)) ? $user->name : $channel ;
