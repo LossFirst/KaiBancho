@@ -14,7 +14,7 @@ class CreateOsuCountryTable extends Migration
     {
         Schema::create('osu_country', function (Blueprint $table) {
             $table->engine = 'InnoDB';
-            $table->integer('id')->unique();
+            $table->integer('id')->unique()->unsigned();
             $table->primary('id');
             $table->string('name');
             $table->string('code');

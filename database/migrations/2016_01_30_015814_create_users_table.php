@@ -20,10 +20,9 @@ class CreateUsersTable extends Migration
             $table->string('password', 255);
             $table->rememberToken();
             $table->integer('usergroup')->length(2);
-            $table->integer('country')->length(4);
-            $table->integer('bantime')->length(11);
+            $table->integer('country')->unsigned();
+            $table->foreign('country')->references('id')->on('osu_country')->onDelete('cascade');
             $table->text('avatar');
-            $table->softDeletes();
             $table->timestamps();
         });
     }

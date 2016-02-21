@@ -4,7 +4,6 @@ namespace App\Libraries;
 
 class Packets
 {
-    const __default = null;
     const IN_SetUserState = 0;
     const IN_RecieveChatMSG = 1;
     const IN_Logout = 2;
