@@ -11,14 +11,13 @@ class Packet {
             case Packets::OUT_OrangeNotification:
             case Packets::OUT_ChannelJoined:
             case Packets::OUT_ChannelDeny:
-            case Packets::OUT_ServerSwitch:
+            case Packets::OUT_SwitchTournyServer:
             case Packets::OUT_BlackScreenNotification:
                 $toreturn = $helper->ULeb128($data);
                 break;
             case Packets::OUT_Popup:
-            case Packets::UK0050:
-            case Packets::UK0059:
-            case Packets::UK0080:
+            case Packets::OUT_RoomHostTransferred:
+            case Packets::OUT_Monitor:
                 $toreturn = array();
                 break;
             case Packets::OUT_PlayerLocaleInfo:
@@ -33,7 +32,7 @@ class Packet {
                     unpack('C*', pack('L*', $data['globalRank']))
                 );
                 break;
-            case Packets::OUT_PlayerStatsUpdate:
+            case Packets::OUT_HandleStatsUpdate:
                 $toreturn = array_merge(
                     unpack('C*', pack('L*', $data['id'])),
                     unpack('C*', pack('C*', $data['bStatus'])),
@@ -75,7 +74,7 @@ class Packet {
                 $toreturn = array_merge($l1, $toreturn);
                 break;
             case Packets::OUT_LoginRequest:
-            case Packets::OUT_PlayerPanelDespawn:
+            case Packets::OUT_HandleUserDisconnect:
             case Packets::OUT_UserGroup:
             case Packets::OUT_Protocol:
             case Packets::OUT_BanStatus:
@@ -129,7 +128,8 @@ class Packet {
                     $player->expireToken($osutoken);
                     break;
                 case Packets::IN_LocalUpdate:
-                    $output = $this->create(Packets::OUT_PlayerStatsUpdate ,$player->getDataDetailed($player->getDatafromID($userID)));
+                    usleep(500); // If the client gets this before the score submits, it'll not want to update.
+                    $output = $this->create(Packets::OUT_HandleStatsUpdate ,$player->getDataDetailed($player->getDatafromID($userID)));
                     break;
                 case Packets::IN_KeepAlive:
                     $message = new RedisMessage();
@@ -158,7 +158,7 @@ class Packet {
                         $output = $this->create(Packets::OUT_ChannelDeny, $ChannelData['Channel']);
                     }
                     break;
-                case Packets::UK0068: //Some thing to do with checking beatmaps at start? (Yea, we won't touch this, looks like it'll be too much (up to 4000+ lines))
+                case Packets::IN_BeatmapInformation: //Some thing to do with checking beatmaps at start? (Yea, we won't touch this, looks like it'll be too much (up to 4000+ lines))
                     break;
                 case Packets::IN_AddFriend:
                     $friend = unpack('x7/C', $body);

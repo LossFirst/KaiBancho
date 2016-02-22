@@ -51,10 +51,17 @@ Route::get('/d/{beatmapid}', function($beatmapID) {
     return redirect(sprintf('http://bloodcat.com/osu/s/%s', $beatmapID));
 })->where('beatmapid', '[0-9]+');
 Route::post('/w/web/osu-submit-modular.php', "Ranking@submitModular");
-Route::get('/w/web/osu-search.php', "Debug@getSearch");
 Route::post('/web/osu-submit-modular.php', "Ranking@submitModular");
+Route::get('/w/web/osu-search.php', "Debug@getSearch");
 Route::get('/web/osu-search.php', "Debug@getSearch");
-Route::get('w/web/osu-search-set.php', 'Debug@getSearchID');
+Route::get('/w/web/osu-search-set.php', 'Debug@getSearchID');
+Route::get('/web/osu-search-set.php', 'Debug@getSearchID');
+Route::get('/w/web/lastfm.php', function() {
+    return '';
+});
+Route::get('/web/lastfm.php', function() {
+    return '';
+});
 Route::post('/', 'Index@postIndex');
 Route::get('/{section}', 'Debug@getDebug')->where(['section' => '.*']);
 Route::post('/{section}', 'Debug@postDebug')->where(['section' => '.*']);

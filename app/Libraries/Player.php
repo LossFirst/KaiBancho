@@ -59,9 +59,9 @@ class Player {
             if($this->isIDOnline($id)) {
                 $user = $this->getDatafromID($id);
                 $output = array_merge($output, $packet->create(Packets::OUT_PlayerLocaleInfo, $this->getData($user)));
-                $output = array_merge($output, $packet->create(Packets::OUT_PlayerStatsUpdate, $this->getDataDetailed($user)));
+                $output = array_merge($output, $packet->create(Packets::OUT_HandleStatsUpdate, $this->getDataDetailed($user)));
             } else {
-                $output = array_merge($output, $packet->create(Packets::OUT_PlayerPanelDespawn, $id));
+                $output = array_merge($output, $packet->create(Packets::OUT_HandleUserDisconnect, $id));
             }
         }
         return $output;
