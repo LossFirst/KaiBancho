@@ -29,7 +29,7 @@ Not telling you how to setup Laravel/Homestead
 
 ### Requirements
 
-- Osu! Fallback/Stable/Cutting Edge
+- Osu! Fallback/Stable/Cutting Edge/Beta
 - Redis
 - HHVM/PHP7/PHP5.6
 - Cron Job (might be used in the future)
