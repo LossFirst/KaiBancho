@@ -15,6 +15,7 @@ class Debug extends Controller
     public function getDebug(Request $request, $section)
     {
         Log::info(sprintf("Request made to %s from %s", $section, $request->getClientIp()));
+        Log::info($request->all());
         return '';
     }
 

@@ -81,7 +81,7 @@ class Ranking extends Controller
         $this->route = Route::getCurrentRoute()->getActionName();
         $rankingLib = new Scores();
         $helper = new Helper();
-        $score = explode(":", $helper->decrypt($request->input('score'), $request->input('iv')));
+        $score = explode(":", $helper->decrypt($request->input('score'), $request->input('iv'), $request->input('osuver')));
         $mods = $rankingLib->mods($score[13]);
         if ($mods->autopilot == false && $mods->autoplay == false && $mods->relax == false) {
             $beatmap = OsuBeatmaps::where('checksum', $score[0])->first();

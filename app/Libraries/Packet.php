@@ -117,18 +117,21 @@ class Packet {
                     $messageData = array();
                     $format = 'CPacket/x2/CLength/x6/CMessageLength';
                     $messageData = array_merge($messageData, unpack($format, $body));
-                    $format = sprintf('@12/X/A%dMessage/x/CChannelLength/A*Channel',$messageData['MessageLength']);
-                    $messageData = array_merge($messageData, unpack($format, $body));
-                    $format = sprintf('@%d/A%dChannel', 13+$messageData['MessageLength'], $messageData['ChannelLength']);
-                    $messageData = array_merge($messageData, unpack($format, $body));
-                    $message = new RedisMessage();
-                    $message->SendMessage($player->getDatafromID($userID), $messageData);
+                    if($messageData['MessageLength'] > 127) {
+                        $output = $this->create(Packets::OUT_OrangeNotification, "Message is too long, please shorten it");
+                    } else {
+                        $format = sprintf('@12/X/A%dMessage/x/CChannelLength',$messageData['MessageLength']);
+                        $messageData = array_merge($messageData, unpack($format, $body));
+                        $format = sprintf('@%d/A%dChannel', 13+$messageData['MessageLength'], $messageData['ChannelLength']);
+                        $messageData = array_merge($messageData, unpack($format, $body));
+                        $message = new RedisMessage();
+                        $message->SendMessage($player->getDatafromID($userID), $messageData);
+                    }
                     break;
                 case Packets::IN_Logout:
                     $player->expireToken($osutoken);
                     break;
                 case Packets::IN_LocalUpdate:
-                    usleep(500); // If the client gets this before the score submits, it'll not want to update.
                     $output = $this->create(Packets::OUT_HandleStatsUpdate ,$player->getDataDetailed($player->getDatafromID($userID)));
                     break;
                 case Packets::IN_KeepAlive:

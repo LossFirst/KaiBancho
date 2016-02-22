@@ -62,6 +62,9 @@ Route::get('/w/web/lastfm.php', function() {
 Route::get('/web/lastfm.php', function() {
     return '';
 });
+Route::get('/web/check-updates.php', function() {
+    return '[{}]';
+});
 Route::post('/', 'Index@postIndex');
 Route::get('/{section}', 'Debug@getDebug')->where(['section' => '.*']);
 Route::post('/{section}', 'Debug@postDebug')->where(['section' => '.*']);
