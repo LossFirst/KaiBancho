@@ -78,6 +78,7 @@ class Packet {
             case Packets::OUT_UserGroup:
             case Packets::OUT_Protocol:
             case Packets::OUT_BanStatus:
+            case Packets::OUT_RoomTitleChange:
             default:
                 $toreturn = unpack('C*', pack('L*', $data));
                 break;
