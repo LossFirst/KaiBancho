@@ -30,16 +30,20 @@ Not telling you how to setup Laravel/Homestead
 ### Requirements
 
 - Osu! Fallback/Stable/Cutting Edge/Beta
+- SSL Certificate (Self Signed is required for hosts method using *.ppy.sh)
 - Redis
 - HHVM/PHP7/PHP5.6
 - Cron Job (might be used in the future)
 
-Hosts
+New and best method
+https://github.com/Igoorx/osuPatcher
+
+Hosts Method
 ```
-192.168.10.10 osu.ppy.sh
-192.168.10.10 a.ppy.sh
-192.168.10.10 c.ppy.sh
-192.168.10.10 c1.ppy.sh
+YourIP osu.ppy.sh
+YourIP a.ppy.sh
+YourIP c.ppy.sh
+YourIP c1.ppy.sh
 ```
 
 

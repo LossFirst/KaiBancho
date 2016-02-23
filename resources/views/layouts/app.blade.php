@@ -7,17 +7,17 @@
     <!-- Tell the browser to be responsive to screen width -->
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     <!-- Bootstrap 3.3.5 -->
-    {!! Html::style("bootstrap/css/bootstrap.min.css", array(), true) !!}
+    {!! Html::style("bootstrap/css/bootstrap.min.css") !!}
     <!-- Font Awesome -->
     {!! Html::style("https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css") !!}
     <!-- Ionicons -->
     {!! Html::style("https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css") !!}
     <!-- Theme style -->
-    {!! Html::style("dist/css/AdminLTE.min.css", array(), true) !!}
-    {!! Html::style("dist/css/custom.css", array(), true) !!}
+    {!! Html::style("dist/css/AdminLTE.min.css") !!}
+    {!! Html::style("dist/css/custom.css") !!}
     <!-- AdminLTE Skins. Choose a skin from the css/skins
         folder instead of downloading all of them to reduce the load. -->
-    {!! Html::style("dist/css/skins/skin-purple-light.css", array(), true) !!}
+    {!! Html::style("dist/css/skins/skin-purple-light.css") !!}
 
    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -51,16 +51,16 @@
     </div>
     <!-- ./wrapper -->
     <!-- jQuery 2.2.0 -->
-    {!! Html::script("plugins/jQuery/jQuery-2.2.0.min.js", array(), true) !!}
+    {!! Html::script("plugins/jQuery/jQuery-2.2.0.min.js") !!}
     <!-- Bootstrap 3.3.5 -->
-    {!! Html::script("bootstrap/js/bootstrap.min.js", array(), true) !!}
+    {!! Html::script("bootstrap/js/bootstrap.min.js") !!}
     <!-- SlimScroll -->
-    {!! Html::script("plugins/slimScroll/jquery.slimscroll.min.js", array(), true) !!}
+    {!! Html::script("plugins/slimScroll/jquery.slimscroll.min.js") !!}
     <!-- FastClick -->
-    {!! Html::script("plugins/fastclick/fastclick.js", array(), true) !!}
+    {!! Html::script("plugins/fastclick/fastclick.js") !!}
     <!-- AdminLTE App -->
-    {!! Html::script("dist/js/app.min.js", array(), true) !!}
+    {!! Html::script("dist/js/app.min.js") !!}
     <!-- AdminLTE for demo purposes -->
-    {!! Html::script("dist/js/demo.js", array(), true) !!}
+    {!! Html::script("dist/js/demo.js") !!}
 </body>
 </html>

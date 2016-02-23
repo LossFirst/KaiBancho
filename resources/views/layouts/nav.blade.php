@@ -45,7 +45,7 @@
                             <ul class="dropdown-menu">
                                 <!-- Menu Body -->
                                 <li class="user-body">
-                                    <form class="form-horizontal" role="form" method="POST" action="{{ secure_url('/login') }}">
+                                    <form class="form-horizontal" role="form" method="POST" action="{{ url('/login') }}">
                                         {!! csrf_field() !!}
                                         <div class="form-group{{ $errors->has('email') ? ' has-error has-feedback' : '' }}">
                                             <div class="col-sm-10 col-sm-offset-1">
@@ -85,14 +85,14 @@
                                         <div class="form-group">
                                             <div class="col-sm-offset-1 col-sm-12">
                                                 <button type="submit" class="btn btn-default">Sign in</button>
-                                                <a class="btn btn-link" href="{{ secure_url('/password/reset') }}">Forgot Your Password?</a>
+                                                <a class="btn btn-link" href="{{ url('/password/reset') }}">Forgot Your Password?</a>
                                             </div>
                                         </div>
                                     </form>
                                 </li>
                             </ul>
                         </li>
-                        <li><a href="{{ secure_url('/register') }}">Register</a></li>
+                        <li><a href="{{ url('/register') }}">Register</a></li>
                     @else
                         <!-- User Account Menu -->
                         <li class="dropdown user user-menu">
@@ -119,7 +119,7 @@
                                         <a href="/u/{{ Auth::user()->id }}" class="btn btn-default btn-flat">Profile</a>
                                     </div>
                                     <div class="pull-right">
-                                        <a href="{{ secure_url('/logout') }}" class="btn btn-default btn-flat">Sign out</a>
+                                        <a href="{{ url('/logout') }}" class="btn btn-default btn-flat">Sign out</a>
                                     </div>
                                 </li>
                             </ul>
