@@ -88,8 +88,7 @@ class Index extends Controller
                     $packet->create(Packets::OUT_ChannelJoined, '#osu'),
                     $packet->create(Packets::OUT_ChannelJoined, '#news'),
                     $packet->create(Packets::OUT_ChannelList, array('#osu', 'Main channel', 2147483647 - 1)),
-                    $packet->create(Packets::OUT_ChannelList, array('#news', 'This will contain announcements and info, while beta lasts.', 1)),
-                    $packet->create(Packets::OUT_RoomTitleChange:, 'https://i.imgur.com/6CbxaPc.jpg|niceme.me')
+                    $packet->create(Packets::OUT_ChannelList, array('#news', 'This will contain announcements and info, while beta lasts.', 1))
                 );
                 $player->setToken($token, $user);
             } else {
