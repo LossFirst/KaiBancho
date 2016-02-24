@@ -9,7 +9,7 @@ class Helper {
         {
             $output = array_merge(array(11, strlen($string)), unpack('C*',$string));
         } else {
-            $output = array_merge(array(11), pack('S*', strlen($string)+1), unpack('C*',$string));
+            $output = array_merge(array(11), unpack('C*', pack('v*', strlen($string)+1)), unpack('C*',$string));
         }
         return $output;
     }
