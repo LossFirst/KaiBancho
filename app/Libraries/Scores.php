@@ -98,6 +98,7 @@ class Scores {
         $beatmap->playcount = $beatmap->playcount + 1;
         $user = User::where('name', $score[1])->first();
         if ($score[14] === 'True') {
+            Log::info($score);
             $beatmap->passcount = $beatmap->passcount + 1;
             DB::table('osu_scores')->insert([
                 'beatmapHash' => $score[0],
@@ -125,32 +126,19 @@ class Scores {
             $user->OsuUserStats->countMiss = $user->OsuUserStats->countMiss + $score[8];
             $user->OsuUserStats->ranked_score = $user->OsuUserStats->ranked_score + $score[9];
             $user->OsuUserStats->playcount = $user->OsuUserStats->playcount + 1;
-            $pp = $this->calcPP($score[0], $score[10], $this->getAccuracyAlt($score[3] + $score[6], $score[4] + $score[7], $score[5], $score[8]));
-            if ($mods->doubletime || $mods->nightcore) {
-                $pp = ($pp + ($pp * .12));
-            }
-            if ($mods->hidden) {
-                $pp = ($pp + ($pp * .06));
-            }
-            if ($mods->hardrock) {
-                $pp = ($pp + ($pp * .06));
-            }
-            if ($mods->flashlight) {
-                $pp = ($pp + ($pp * .12));
-            }
-            if ($mods->easy) {
-                $pp = ($pp - ($pp * .5));
-            }
-            if ($mods->halftime) {
-                $pp = ($pp - ($pp * .7));
-            }
-            if ($mods->nofail) {
-                $pp = ($pp - ($pp * .1));
-            }
-            if ($mods->spunout) {
-                $pp = ($pp - ($pp * .05));
-            }
+            $pp = $this->calcPP($score[0], $this->getAccuracyAlt($score[3] + $score[6], $score[4] + $score[7], $score[5], $score[8]), $mods, $score);
             $user->OsuUserStats->pp = $user->OsuUserStats->pp + $pp;
+            $redis = new RedisMessage();
+            $messages = array();
+            $return = array('Channel' => $user->name);
+            array_push($messages, sprintf("With accuracy of %f", ($this->getAccuracyAlt($score[3] + $score[6], $score[4] + $score[7], $score[5], $score[8])) * 100));
+            array_push($messages, sprintf("From %s - %s [%s]", $beatmap->author, $beatmap->title, $beatmap->version));
+            array_push($messages, sprintf("You have gained %f PP", $pp));
+            foreach($messages as $message)
+            {
+                $return = array_merge($return, array('Message' => $message));
+                $redis->SendMessage((object)array('id' => -1, 'name' => 'PP_Bot'), $return);
+            }
         }
         $user->OsuUserStats->total_score = $user->OsuUserStats->total_score + $score[9];
         $user->OsuUserStats->save();
@@ -271,17 +259,95 @@ class Scores {
         $beatmap->save();
     }
 
-    function calcPP($bmhash, $combo, $acc)
+    public function calcPP($bmhash, $acc, $mods, $score)
     {
         $X = 1.1;
         $beatmap = OsuBeatmaps::where('checksum', $bmhash)->first();
-        $approach = $beatmap->diff_approach;
-        $speed = ($beatmap->countTotal / $beatmap->total_length);
-        $comboFloat = ($combo / $beatmap->countTotal);
-        $comboSpeedStuff = (($speed + $comboFloat) / $X);
-        $data = ($comboSpeedStuff^$X + $approach^$X + $acc^$X)^(1/$X);
-        log::info($data);
-        return $data;
+        $aimpp = ((($this->calcAimPP($beatmap, $mods, $score, $acc))^$X));
+        $speedpp = ((($this->calcSpeedPP($beatmap, $mods, $score, $acc))^$X));
+        $accpp = ((($this->calcAccPP($beatmap, $mods, $score, $acc))^$X));
+        $pp = $this->calcMods($mods, ($aimpp + $speedpp + $accpp)^(1/$X));
+        //Log::info(sprintf("Aim: %f || Speed: %f || Acc: %f || PPvFUCK: %f", $aimpp, $speedpp, $accpp, $pp));
+        return $pp;
+    }
+
+    function calcAimPP($beatmap, $mods, $score, $accuracy)
+    {
+        $ar = $beatmap->diff_approach;
+        $countTotal = $beatmap->countTotal;
+        $length = $beatmap->hit_length;
+        $cs = $beatmap->diff_size;
+        $combo = (integer)$score[10];
+        $miss = (integer)$score[8];
+
+        $csValue = $this->calcMods($mods, $cs);
+        $arValue = $this->calcMods($mods, $ar);
+        $lengthValue = ($countTotal / $length);
+        $comboMissValue = ((($miss === 0) ? $combo : $combo / $miss) / 6);
+
+        //log::info(sprintf("Aim Diff: %f || AR Diff: %f || Length Diff: %f || ComboMiss: %f", $csValue, $arValue, $lengthValue, $comboMissValue));
+
+        return ((($csValue + $arValue + $lengthValue + $comboMissValue)) * $accuracy);
+    }
+
+    function calcSpeedPP($beatmap, $mods, $score, $accuracy)
+    {
+        $length = $beatmap->hit_length;
+        $countTotal = $beatmap->countTotal;
+        $combo = (integer)$score[10];
+        $miss = (integer)$score[8];
+        $drain = $beatmap->diff_drain;
+
+        $lengthValue = ($countTotal / $length);
+        $drainValue = $this->calcMods($mods, $drain);
+        $comboMissValue = ((($miss === 0) ? $combo : $combo / $miss) / 6);
+
+        //log::info(sprintf("Drain Diff: %f || Length Diff: %f || ComboMiss: %f", $drainValue, $lengthValue, $comboMissValue));
+
+        return ((($drainValue + $lengthValue + $comboMissValue)) * $accuracy);
+    }
+
+    function calcAccPP($beatmap, $mods, $score, $accuracy)
+    {
+        $od = $beatmap->diff_overall;
+        $countTotal = $beatmap->countTotal;
+        $length = $beatmap->hit_length;
+
+        $lengthValue = ($countTotal / $length);
+        $odValue = ($this->calcMods($mods, $od));
+
+        //log::info(sprintf("OD Diff: %f || Length Diff: %f || Accuracy: %f", $odValue, $lengthValue, $accuracy));
+
+        return ((($odValue + $lengthValue + $accuracy) * 3) * $accuracy);
+    }
+
+    function calcMods($mods, $calc)
+    {
+        if ($mods->doubletime || $mods->nightcore) {
+            $calc = ($calc + ($calc * .12));
+        }
+        if ($mods->hidden) {
+            $calc = ($calc + ($calc * .06));
+        }
+        if ($mods->hardrock) {
+            $calc = ($calc + ($calc * .06));
+        }
+        if ($mods->flashlight) {
+            $calc = ($calc + ($calc * .12));
+        }
+        if ($mods->easy) {
+            $calc = ($calc - ($calc * .5));
+        }
+        if ($mods->halftime) {
+            $calc = ($calc - ($calc * .7));
+        }
+        if ($mods->nofail) {
+            $calc = ($calc - ($calc * .1));
+        }
+        if ($mods->spunout) {
+            $calc = ($calc - ($calc * .05));
+        }
+        return $calc;
     }
 
     public function mods($mods)

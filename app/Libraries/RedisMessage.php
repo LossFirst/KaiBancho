@@ -88,11 +88,6 @@ class RedisMessage
                 $return = array_merge($return, array('Message' => $data));
                 $this->SendMessage((object)array('id' => -1, 'name' => 'KaiBancho'), $return);
                 break;
-            case "!test":
-                $data = "O-oooooooooo AAAAE-A-A-I-A-U- JO-oooooooooooo AAE-O-A-A-U-U-A- E-eee-ee-eee AAAAE-A-E-I-E-A- JO-ooo-oo-oo-oo EEEEO-A-AAA-AAAAO-oooooooooo AAAAE-A-A-I-A-U- JO-oooooooooooo AAE-O-A-A-U-U-A- E-eee-ee-eee AAAAE-A-E-I-E-A-JO-ooo-oo-oo-oo EEEEO-A-AAA-AAAAO-oooooooooo AAAAE-A-A-I-A-U- JO-oooooooooooo AAE-O-A-A-U-U-A- E-eee-ee-eee AAAAE-A-E-I-E-A-JO-ooo-oo-oo-oo EEEEO-A-AAA-AAAAO-oooooooooo AAAAE-A-A-I-A-U- JO-oooooooooooo AAE-O-A-A-U-U-A- E-eee-ee-eee AAAAE-A-E-I-E-A-JO-ooo-oo-oo-oo EEEEO-A-AAA-AAAA";
-                $return = array_merge($return, array('Message' => $data));
-                $this->SendMessage((object)array('id' => -1, 'name' => 'KaiBancho'), $return);
-                break;
             default:
                 $data = sprintf("The command %s doesn't exist", $command[0]);
                 $return = array_merge($return, array('Message' => $data));
