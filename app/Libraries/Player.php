@@ -138,7 +138,7 @@ class Player {
             'playerName' => $player->name,
             'utcOffset' => 0 + 24,
             'country' => $player->country,
-            'playerRank' => 0,
+            'playerRank' => $player->usergroup,
             'longitude' => 0,
             'latitude' => 0,
             'globalRank' => $this->getUserRank($player),
@@ -244,14 +244,14 @@ class Player {
         $redis = Redis::connection();
         $redis->set(sprintf("CurrentlyLoggedIn:%s", $token), $user->id);
         $redis->set(sprintf("CurrentlyLoggedInID:%d", $user->id), $user->id);
-        $redis->expire(sprintf("CurrentlyLoggedIn:%s", $token), 30);
+        $redis->expire(sprintf("CurrentlyLoggedIn:%s", $token), 60);
         $redis->expire(sprintf("CurrentlyLoggedInID:%d", $user->id), 30);
     }
 
     public function updateToken($token, $userID)
     {
         $redis = Redis::connection();
-        $redis->expire(sprintf("CurrentlyLoggedIn:%s", $token), 30);
+        $redis->expire(sprintf("CurrentlyLoggedIn:%s", $token), 60);
         $redis->expire(sprintf("CurrentlyLoggedInID:%d", $userID), 30);
     }
 

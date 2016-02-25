@@ -69,7 +69,7 @@ class Scores {
                 $table = 'mania_scores';
                 break;
         }
-        return DB::table($table)->where('user_id', '=', $user->id)->where('beatmapHash', '=', $checksum)->select('id','user_id','score','combo','count50','count100','count300','countMiss','countKatu','countGeki','fc','mods', DB::raw(sprintf("FIND_IN_SET( score, (SELECT GROUP_CONCAT( score ORDER BY score DESC ) FROM osu_scores WHERE beatmapHash = '%s' )) AS rank", $user->id, $checksum)),'created_at')->orderBy('rank','asc')->first();
+        return DB::table($table)->where('user_id', '=', $user->id)->where('beatmapHash', '=', $checksum)->select('id','user_id','score','combo','count50','count100','count300','countMiss','countKatu','countGeki','fc','mods', DB::raw(sprintf("FIND_IN_SET( score, (SELECT GROUP_CONCAT( score ORDER BY score DESC ) FROM osu_scores WHERE beatmapHash = '%s' )) AS rank", $checksum)),'created_at')->orderBy('rank','asc')->first();
     }
 
     public function getRankings($checksum, $mode)
@@ -93,51 +93,85 @@ class Scores {
         return DB::table($table)->select('id','user_id','score','combo','count50','count100','count300','countMiss','countKatu','countGeki','fc','mods', DB::raw(sprintf("FIND_IN_SET( score, (SELECT GROUP_CONCAT( score ORDER BY score DESC ) FROM osu_scores WHERE beatmapHash = '%s' )) AS rank", $checksum)),'created_at')->where('beatmapHash', '=', $checksum)->orderBy('rank','asc')->limit(50)->get();
     }
 
-    public function submitOsuScore($beatmap, $score, $mods)
+    public function submitOsuScore($beatmap, $score, $mods, $currentTime)
     {
         $beatmap->playcount = $beatmap->playcount + 1;
         $user = User::where('name', $score[1])->first();
         if ($score[14] === 'True') {
-            Log::info($score);
             $beatmap->passcount = $beatmap->passcount + 1;
-            DB::table('osu_scores')->insert([
-                'beatmapHash' => $score[0],
-                'user_id' => $user->id,
-                'score' => $score[9],
-                'rank' => $score[12],
-                'combo' => $score[10],
-                'count50' => $score[5],
-                'count100' => $score[4],
-                'count300' => $score[3],
-                'countMiss' => $score[8],
-                'countKatu' => $score[7],
-                'countGeki' => $score[6],
-                'fc' => ($score[11] === 'True' ? true : false),
-                'mods' => $score[13],
-                'pass' => ($score[14] === 'True' ? true : false),
-                'created_at' => Carbon::now()
-            ]);
-            if ($score[10] > $user->OsuUserStats->max_combo) {
-                $user->OsuUserStats->max_combo = $score[10];
-            }
-            $user->OsuUserStats->count300 = $user->OsuUserStats->count300 + $score[3] + $score[6];
-            $user->OsuUserStats->count100 = $user->OsuUserStats->count100 + $score[4] + $score[7];
-            $user->OsuUserStats->count50 = $user->OsuUserStats->count50 + $score[5];
-            $user->OsuUserStats->countMiss = $user->OsuUserStats->countMiss + $score[8];
-            $user->OsuUserStats->ranked_score = $user->OsuUserStats->ranked_score + $score[9];
-            $user->OsuUserStats->playcount = $user->OsuUserStats->playcount + 1;
+            $scoreSubmission = DB::table('osu_scores')->where('beatmapHash', $beatmap->checksum)->where('user_id', $user->id)->first();
             $pp = $this->calcPP($score[0], $this->getAccuracyAlt($score[3] + $score[6], $score[4] + $score[7], $score[5], $score[8]), $mods, $score);
-            $user->OsuUserStats->pp = $user->OsuUserStats->pp + $pp;
-            $redis = new RedisMessage();
-            $messages = array();
-            $return = array('Channel' => $user->name);
-            array_push($messages, sprintf("With accuracy of %f", ($this->getAccuracyAlt($score[3] + $score[6], $score[4] + $score[7], $score[5], $score[8])) * 100));
-            array_push($messages, sprintf("From %s - %s [%s]", $beatmap->author, $beatmap->title, $beatmap->version));
-            array_push($messages, sprintf("You have gained %f PP", $pp));
-            foreach($messages as $message)
-            {
-                $return = array_merge($return, array('Message' => $message));
+            if($scoreSubmission === null) {
+                DB::table('osu_scores')->insert([
+                    'beatmapHash' => $score[0],
+                    'user_id' => $user->id,
+                    'score' => $score[9],
+                    'pp' => $pp,
+                    'rank' => $score[12],
+                    'combo' => $score[10],
+                    'count50' => $score[5],
+                    'count100' => $score[4],
+                    'count300' => $score[3],
+                    'countMiss' => $score[8],
+                    'countKatu' => $score[7],
+                    'countGeki' => $score[6],
+                    'fc' => ($score[11] === 'True' ? true : false),
+                    'mods' => $score[13],
+                    'pass' => ($score[14] === 'True' ? true : false),
+                    'created_at' => $currentTime
+                ]);
+                if ($score[10] > $user->OsuUserStats->max_combo) {
+                    $user->OsuUserStats->max_combo = $score[10];
+                }
+                $user->OsuUserStats->count300 = $user->OsuUserStats->count300 + $score[3] + $score[6];
+                $user->OsuUserStats->count100 = $user->OsuUserStats->count100 + $score[4] + $score[7];
+                $user->OsuUserStats->count50 = $user->OsuUserStats->count50 + $score[5];
+                $user->OsuUserStats->countMiss = $user->OsuUserStats->countMiss + $score[8];
+                $user->OsuUserStats->ranked_score = $user->OsuUserStats->ranked_score + $score[9];
+                $user->OsuUserStats->playcount = $user->OsuUserStats->playcount + 1;
+                $user->OsuUserStats->pp = $user->OsuUserStats->pp + $pp;
+                $redis = new RedisMessage();
+                $message = sprintf("You have gained %d PP with accuracy of %01.2f from %s - %s [%s]", $pp, ($this->getAccuracyAlt($score[3], $score[4], $score[5], $score[8])) * 100, $beatmap->author, $beatmap->title, $beatmap->version);
+                $return = array('Channel' => $user->name, 'Message' => $message);
                 $redis->SendMessage((object)array('id' => -1, 'name' => 'PP_Bot'), $return);
+            } else {
+                if((integer)$score[9] > $scoreSubmission->score)
+                {
+                    $oldPP = $scoreSubmission->pp;
+                    $ppDiff = $pp - $oldPP;
+                    DB::table('osu_scores')->where('beatmapHash', $beatmap->checksum)->where('user_id', $user->id)->update([
+                        'beatmapHash' => $score[0],
+                        'user_id' => $user->id,
+                        'score' => $score[9],
+                        'pp' => $pp,
+                        'rank' => $score[12],
+                        'combo' => $score[10],
+                        'count50' => $score[5],
+                        'count100' => $score[4],
+                        'count300' => $score[3],
+                        'countMiss' => $score[8],
+                        'countKatu' => $score[7],
+                        'countGeki' => $score[6],
+                        'fc' => ($score[11] === 'True' ? true : false),
+                        'mods' => $score[13],
+                        'pass' => ($score[14] === 'True' ? true : false),
+                        'created_at' => $currentTime
+                    ]);
+                    if ($score[10] > $user->OsuUserStats->max_combo) {
+                        $user->OsuUserStats->max_combo = $score[10];
+                    }
+                    $user->OsuUserStats->count300 = $user->OsuUserStats->count300 + $score[3] + $score[6];
+                    $user->OsuUserStats->count100 = $user->OsuUserStats->count100 + $score[4] + $score[7];
+                    $user->OsuUserStats->count50 = $user->OsuUserStats->count50 + $score[5];
+                    $user->OsuUserStats->countMiss = $user->OsuUserStats->countMiss + $score[8];
+                    $user->OsuUserStats->ranked_score = $user->OsuUserStats->ranked_score + $score[9];
+                    $user->OsuUserStats->playcount = $user->OsuUserStats->playcount + 1;
+                    $user->OsuUserStats->pp = $user->OsuUserStats->pp + $ppDiff;
+                    $redis = new RedisMessage();
+                    $message = sprintf("You have gained/lost %d PP with accuracy of %01.2f from %s - %s [%s]", $ppDiff, ($this->getAccuracyAlt($score[3], $score[4], $score[5], $score[8])) * 100, $beatmap->author, $beatmap->title, $beatmap->version);
+                    $return = array('Channel' => $user->name, 'Message' => $message);
+                    $redis->SendMessage((object)array('id' => -1, 'name' => 'PP_Bot'), $return);
+                }
             }
         }
         $user->OsuUserStats->total_score = $user->OsuUserStats->total_score + $score[9];
@@ -145,114 +179,258 @@ class Scores {
         $beatmap->save();
     }
 
-    public function submitTaikoScore($beatmap, $score, $mods)
+    public function submitTaikoScore($beatmap, $score, $mods, $currentTime)
     {
         $beatmap->playcount = $beatmap->playcount + 1;
         $user = User::where('name', $score[1])->first();
         if ($score[14] === 'True') {
             $beatmap->passcount = $beatmap->passcount + 1;
-            DB::table('taiko_scores')->insert([
-                'beatmapHash' => $score[0],
-                'user_id' => $user->id,
-                'score' => $score[9],
-                'rank' => $score[12],
-                'combo' => $score[10],
-                'count50' => $score[5],
-                'count100' => $score[4],
-                'count300' => $score[3],
-                'countMiss' => $score[8],
-                'countKatu' => $score[7],
-                'countGeki' => $score[6],
-                'fc' => ($score[11] === 'True' ? true : false),
-                'mods' => $score[13],
-                'pass' => ($score[14] === 'True' ? true : false),
-                'created_at' => Carbon::now()
-            ]);
-            if ($score[10] > $user->TaikoUserStats->max_combo) {
-                $user->TaikoUserStats->max_combo = $score[10];
+            $scoreSubmission = DB::table('taiko_scores')->where('beatmapHash', $beatmap->checksum)->where('user_id', $user->id)->first();
+            $pp = $this->calcPP($score[0], $this->getAccuracyAlt($score[3] + $score[6], $score[4] + $score[7], $score[5], $score[8]), $mods, $score);
+            if($scoreSubmission === null) {
+                DB::table('taiko_scores')->insert([
+                    'beatmapHash' => $score[0],
+                    'user_id' => $user->id,
+                    'score' => $score[9],
+                    'pp' => $pp,
+                    'rank' => $score[12],
+                    'combo' => $score[10],
+                    'count50' => $score[5],
+                    'count100' => $score[4],
+                    'count300' => $score[3],
+                    'countMiss' => $score[8],
+                    'countKatu' => $score[7],
+                    'countGeki' => $score[6],
+                    'fc' => ($score[11] === 'True' ? true : false),
+                    'mods' => $score[13],
+                    'pass' => ($score[14] === 'True' ? true : false),
+                    'created_at' => $currentTime
+                ]);
+                if ($score[10] > $user->TaikoUserStats->max_combo) {
+                    $user->TaikoUserStats->max_combo = $score[10];
+                }
+                $user->TaikoUserStats->count300 = $user->TaikoUserStats->count300 + $score[3] + $score[6];
+                $user->TaikoUserStats->count100 = $user->TaikoUserStats->count100 + $score[4] + $score[7];
+                $user->TaikoUserStats->count50 = $user->TaikoUserStats->count50 + $score[5];
+                $user->TaikoUserStats->countMiss = $user->TaikoUserStats->countMiss + $score[8];
+                $user->TaikoUserStats->ranked_score = $user->TaikoUserStats->ranked_score + $score[9];
+                $user->TaikoUserStats->playcount = $user->TaikoUserStats->playcount + 1;
+                $user->TaikoUserStats->pp = $user->TaikoUserStats->pp + $pp;
+                $redis = new RedisMessage();
+                $message = sprintf("You have gained %d PP with accuracy of %01.2f from %s - %s [%s]", $pp, ($this->getAccuracyAlt($score[3], $score[4], $score[5], $score[8])) * 100, $beatmap->author, $beatmap->title, $beatmap->version);
+                $return = array('Channel' => $user->name, 'Message' => $message);
+                $redis->SendMessage((object)array('id' => -1, 'name' => 'PP_Bot'), $return);
+            } else {
+                if((integer)$score[9] > $scoreSubmission->score)
+                {
+                    $oldPP = $scoreSubmission->pp;
+                    $ppDiff = $pp - $oldPP;
+                    DB::table('taiko_scores')->where('beatmapHash', $beatmap->checksum)->where('user_id', $user->id)->update([
+                        'beatmapHash' => $score[0],
+                        'user_id' => $user->id,
+                        'score' => $score[9],
+                        'pp' => $pp,
+                        'rank' => $score[12],
+                        'combo' => $score[10],
+                        'count50' => $score[5],
+                        'count100' => $score[4],
+                        'count300' => $score[3],
+                        'countMiss' => $score[8],
+                        'countKatu' => $score[7],
+                        'countGeki' => $score[6],
+                        'fc' => ($score[11] === 'True' ? true : false),
+                        'mods' => $score[13],
+                        'pass' => ($score[14] === 'True' ? true : false),
+                        'created_at' => $currentTime
+                    ]);
+                    if ($score[10] > $user->TaikoUserStats->max_combo) {
+                        $user->TaikoUserStats->max_combo = $score[10];
+                    }
+                    $user->TaikoUserStats->count300 = $user->TaikoUserStats->count300 + $score[3] + $score[6];
+                    $user->TaikoUserStats->count100 = $user->TaikoUserStats->count100 + $score[4] + $score[7];
+                    $user->TaikoUserStats->count50 = $user->TaikoUserStats->count50 + $score[5];
+                    $user->TaikoUserStats->countMiss = $user->TaikoUserStats->countMiss + $score[8];
+                    $user->TaikoUserStats->ranked_score = $user->TaikoUserStats->ranked_score + $score[9];
+                    $user->TaikoUserStats->playcount = $user->TaikoUserStats->playcount + 1;
+                    $user->TaikoUserStats->pp = $user->TaikoUserStats->pp + $ppDiff;
+                    $redis = new RedisMessage();
+                    $message = sprintf("You have gained/lost %d PP with accuracy of %01.2f from %s - %s [%s]", $ppDiff, ($this->getAccuracyAlt($score[3], $score[4], $score[5], $score[8])) * 100, $beatmap->author, $beatmap->title, $beatmap->version);
+                    $return = array('Channel' => $user->name, 'Message' => $message);
+                    $redis->SendMessage((object)array('id' => -1, 'name' => 'PP_Bot'), $return);
+                }
             }
-            $user->TaikoUserStats->count300 = $user->TaikoUserStats->count300 + $score[3] + $score[6];
-            $user->TaikoUserStats->count100 = $user->TaikoUserStats->count100 + $score[4] + $score[7];
-            $user->TaikoUserStats->count50 = $user->TaikoUserStats->count50 + $score[5];
-            $user->TaikoUserStats->countMiss = $user->TaikoUserStats->countMiss + $score[8];
-            $user->TaikoUserStats->ranked_score = $user->TaikoUserStats->ranked_score + $score[9];
-            $user->TaikoUserStats->playcount = $user->TaikoUserStats->playcount + 1;
         }
         $user->TaikoUserStats->total_score = $user->TaikoUserStats->total_score + $score[9];
         $user->TaikoUserStats->save();
         $beatmap->save();
     }
 
-    public function submitManiaScore($beatmap, $score, $mods)
+    public function submitManiaScore($beatmap, $score, $mods, $currentTime)
     {
         $beatmap->playcount = $beatmap->playcount + 1;
         $user = User::where('name', $score[1])->first();
         if ($score[14] === 'True') {
             $beatmap->passcount = $beatmap->passcount + 1;
-            DB::table('mania_scores')->insert([
-                'beatmapHash' => $score[0],
-                'user_id' => $user->id,
-                'score' => $score[9],
-                'rank' => $score[12],
-                'combo' => $score[10],
-                'count50' => $score[5],
-                'count100' => $score[4],
-                'count300' => $score[3],
-                'countMiss' => $score[8],
-                'countKatu' => $score[7],
-                'countGeki' => $score[6],
-                'fc' => ($score[11] === 'True' ? true : false),
-                'mods' => $score[13],
-                'pass' => ($score[14] === 'True' ? true : false),
-                'created_at' => Carbon::now()
-            ]);
-            if ($score[10] > $user->ManiaUserStats->max_combo) {
-                $user->ManiaUserStats->max_combo = $score[10];
+            $scoreSubmission = DB::table('mania_scores')->where('beatmapHash', $beatmap->checksum)->where('user_id', $user->id)->first();
+            $pp = $this->calcPP($score[0], $this->getAccuracyAlt($score[3] + $score[6], $score[4] + $score[7], $score[5], $score[8]), $mods, $score);
+            if($scoreSubmission === null) {
+                DB::table('mania_scores')->insert([
+                    'beatmapHash' => $score[0],
+                    'user_id' => $user->id,
+                    'score' => $score[9],
+                    'pp' => $pp,
+                    'rank' => $score[12],
+                    'combo' => $score[10],
+                    'count50' => $score[5],
+                    'count100' => $score[4],
+                    'count300' => $score[3],
+                    'countMiss' => $score[8],
+                    'countKatu' => $score[7],
+                    'countGeki' => $score[6],
+                    'fc' => ($score[11] === 'True' ? true : false),
+                    'mods' => $score[13],
+                    'pass' => ($score[14] === 'True' ? true : false),
+                    'created_at' => $currentTime
+                ]);
+                if ($score[10] > $user->ManiaUserStats->max_combo) {
+                    $user->ManiaUserStats->max_combo = $score[10];
+                }
+                $user->ManiaUserStats->count300 = $user->ManiaUserStats->count300 + $score[3] + $score[6];
+                $user->ManiaUserStats->count100 = $user->ManiaUserStats->count100 + $score[4] + $score[7];
+                $user->ManiaUserStats->count50 = $user->ManiaUserStats->count50 + $score[5];
+                $user->ManiaUserStats->countMiss = $user->ManiaUserStats->countMiss + $score[8];
+                $user->ManiaUserStats->ranked_score = $user->ManiaUserStats->ranked_score + $score[9];
+                $user->ManiaUserStats->playcount = $user->ManiaUserStats->playcount + 1;
+                $user->ManiaUserStats->pp = $user->ManiaUserStats->pp + $pp;
+                $redis = new RedisMessage();
+                $message = sprintf("You have gained %d PP with accuracy of %01.2f from %s - %s [%s]", $pp, ($this->getAccuracyAlt($score[3], $score[4], $score[5], $score[8])) * 100, $beatmap->author, $beatmap->title, $beatmap->version);
+                $return = array('Channel' => $user->name, 'Message' => $message);
+                $redis->SendMessage((object)array('id' => -1, 'name' => 'PP_Bot'), $return);
+            } else {
+                if((integer)$score[9] > $scoreSubmission->score)
+                {
+                    $oldPP = $scoreSubmission->pp;
+                    $ppDiff = $pp - $oldPP;
+                    DB::table('mania_scores')->where('beatmapHash', $beatmap->checksum)->where('user_id', $user->id)->update([
+                        'beatmapHash' => $score[0],
+                        'user_id' => $user->id,
+                        'score' => $score[9],
+                        'pp' => $pp,
+                        'rank' => $score[12],
+                        'combo' => $score[10],
+                        'count50' => $score[5],
+                        'count100' => $score[4],
+                        'count300' => $score[3],
+                        'countMiss' => $score[8],
+                        'countKatu' => $score[7],
+                        'countGeki' => $score[6],
+                        'fc' => ($score[11] === 'True' ? true : false),
+                        'mods' => $score[13],
+                        'pass' => ($score[14] === 'True' ? true : false),
+                        'created_at' => $currentTime
+                    ]);
+                    if ($score[10] > $user->ManiaUserStats->max_combo) {
+                        $user->ManiaUserStats->max_combo = $score[10];
+                    }
+                    $user->ManiaUserStats->count300 = $user->ManiaUserStats->count300 + $score[3] + $score[6];
+                    $user->ManiaUserStats->count100 = $user->ManiaUserStats->count100 + $score[4] + $score[7];
+                    $user->ManiaUserStats->count50 = $user->ManiaUserStats->count50 + $score[5];
+                    $user->ManiaUserStats->countMiss = $user->ManiaUserStats->countMiss + $score[8];
+                    $user->ManiaUserStats->ranked_score = $user->ManiaUserStats->ranked_score + $score[9];
+                    $user->ManiaUserStats->playcount = $user->ManiaUserStats->playcount + 1;
+                    $user->ManiaUserStats->pp = $user->ManiaUserStats->pp + $ppDiff;
+                    $redis = new RedisMessage();
+                    $message = sprintf("You have gained/lost %d PP with accuracy of %01.2f from %s - %s [%s]", $ppDiff, ($this->getAccuracyAlt($score[3], $score[4], $score[5], $score[8])) * 100, $beatmap->author, $beatmap->title, $beatmap->version);
+                    $return = array('Channel' => $user->name, 'Message' => $message);
+                    $redis->SendMessage((object)array('id' => -1, 'name' => 'PP_Bot'), $return);
+                }
             }
-            $user->ManiaUserStats->count300 = $user->ManiaUserStats->count300 + $score[3] + $score[6];
-            $user->ManiaUserStats->count100 = $user->ManiaUserStats->count100 + $score[4] + $score[7];
-            $user->ManiaUserStats->count50 = $user->ManiaUserStats->count50 + $score[5];
-            $user->ManiaUserStats->countMiss = $user->ManiaUserStats->countMiss + $score[8];
-            $user->ManiaUserStats->ranked_score = $user->ManiaUserStats->ranked_score + $score[9];
-            $user->ManiaUserStats->playcount = $user->ManiaUserStats->playcount + 1;
         }
         $user->ManiaUserStats->total_score = $user->ManiaUserStats->total_score + $score[9];
         $user->ManiaUserStats->save();
         $beatmap->save();
     }
 
-    public function submitCTBScore($beatmap, $score, $mods)
+    public function submitCTBScore($beatmap, $score, $mods, $currentTime)
     {
         $beatmap->playcount = $beatmap->playcount + 1;
         $user = User::where('name', $score[1])->first();
         if ($score[14] === 'True') {
             $beatmap->passcount = $beatmap->passcount + 1;
-            DB::table('ctb_scores')->insert([
-                'beatmapHash' => $score[0],
-                'user_id' => $user->id,
-                'score' => $score[9],
-                'rank' => $score[12],
-                'combo' => $score[10],
-                'count50' => $score[5],
-                'count100' => $score[4],
-                'count300' => $score[3],
-                'countMiss' => $score[8],
-                'countKatu' => $score[7],
-                'countGeki' => $score[6],
-                'fc' => ($score[11] === 'True' ? true : false),
-                'mods' => $score[13],
-                'pass' => ($score[14] === 'True' ? true : false),
-                'created_at' => Carbon::now()
-            ]);
-            if ($score[10] > $user->CTBUserStats->max_combo) {
-                $user->CTBUserStats->max_combo = $score[10];
+            $scoreSubmission = DB::table('ctb_scores')->where('beatmapHash', $beatmap->checksum)->where('user_id', $user->id)->first();
+            $pp = $this->calcPP($score[0], $this->getAccuracyAlt($score[3] + $score[6], $score[4] + $score[7], $score[5], $score[8]), $mods, $score);
+            if($scoreSubmission === null) {
+                DB::table('ctb_scores')->insert([
+                    'beatmapHash' => $score[0],
+                    'user_id' => $user->id,
+                    'score' => $score[9],
+                    'pp' => $pp,
+                    'rank' => $score[12],
+                    'combo' => $score[10],
+                    'count50' => $score[5],
+                    'count100' => $score[4],
+                    'count300' => $score[3],
+                    'countMiss' => $score[8],
+                    'countKatu' => $score[7],
+                    'countGeki' => $score[6],
+                    'fc' => ($score[11] === 'True' ? true : false),
+                    'mods' => $score[13],
+                    'pass' => ($score[14] === 'True' ? true : false),
+                    'created_at' => $currentTime
+                ]);
+                if ($score[10] > $user->CTBUserStats->max_combo) {
+                    $user->CTBUserStats->max_combo = $score[10];
+                }
+                $user->CTBUserStats->count300 = $user->CTBUserStats->count300 + $score[3] + $score[6];
+                $user->CTBUserStats->count100 = $user->CTBUserStats->count100 + $score[4] + $score[7];
+                $user->CTBUserStats->count50 = $user->CTBUserStats->count50 + $score[5];
+                $user->CTBUserStats->countMiss = $user->CTBUserStats->countMiss + $score[8];
+                $user->CTBUserStats->ranked_score = $user->CTBUserStats->ranked_score + $score[9];
+                $user->CTBUserStats->playcount = $user->CTBUserStats->playcount + 1;
+                $user->CTBUserStats->pp = $user->CTBUserStats->pp + $pp;
+                $redis = new RedisMessage();
+                $message = sprintf("You have gained %d PP with accuracy of %01.2f from %s - %s [%s]", $pp, ($this->getAccuracyAlt($score[3], $score[4], $score[5], $score[8])) * 100, $beatmap->author, $beatmap->title, $beatmap->version);
+                $return = array('Channel' => $user->name, 'Message' => $message);
+                $redis->SendMessage((object)array('id' => -1, 'name' => 'PP_Bot'), $return);
+            } else {
+                if((integer)$score[9] > $scoreSubmission->score)
+                {
+                    $oldPP = $scoreSubmission->pp;
+                    $ppDiff = $pp - $oldPP;
+                    DB::table('ctb_scores')->where('beatmapHash', $beatmap->checksum)->where('user_id', $user->id)->update([
+                        'beatmapHash' => $score[0],
+                        'user_id' => $user->id,
+                        'score' => $score[9],
+                        'pp' => $pp,
+                        'rank' => $score[12],
+                        'combo' => $score[10],
+                        'count50' => $score[5],
+                        'count100' => $score[4],
+                        'count300' => $score[3],
+                        'countMiss' => $score[8],
+                        'countKatu' => $score[7],
+                        'countGeki' => $score[6],
+                        'fc' => ($score[11] === 'True' ? true : false),
+                        'mods' => $score[13],
+                        'pass' => ($score[14] === 'True' ? true : false),
+                        'created_at' => $currentTime
+                    ]);
+                    if ($score[10] > $user->CTBUserStats->max_combo) {
+                        $user->CTBUserStats->max_combo = $score[10];
+                    }
+                    $user->CTBUserStats->count300 = $user->CTBUserStats->count300 + $score[3] + $score[6];
+                    $user->CTBUserStats->count100 = $user->CTBUserStats->count100 + $score[4] + $score[7];
+                    $user->CTBUserStats->count50 = $user->CTBUserStats->count50 + $score[5];
+                    $user->CTBUserStats->countMiss = $user->CTBUserStats->countMiss + $score[8];
+                    $user->CTBUserStats->ranked_score = $user->CTBUserStats->ranked_score + $score[9];
+                    $user->CTBUserStats->playcount = $user->CTBUserStats->playcount + 1;
+                    $user->CTBUserStats->pp = $user->CTBUserStats->pp + $ppDiff;
+                    $redis = new RedisMessage();
+                    $message = sprintf("You have gained/lost %d PP with accuracy of %01.2f from %s - %s [%s]", $ppDiff, ($this->getAccuracyAlt($score[3], $score[4], $score[5], $score[8])) * 100, $beatmap->author, $beatmap->title, $beatmap->version);
+                    $return = array('Channel' => $user->name, 'Message' => $message);
+                    $redis->SendMessage((object)array('id' => -1, 'name' => 'PP_Bot'), $return);
+                }
             }
-            $user->CTBUserStats->count300 = $user->CTBUserStats->count300 + $score[3] + $score[6];
-            $user->CTBUserStats->count100 = $user->CTBUserStats->count100 + $score[4] + $score[7];
-            $user->CTBUserStats->count50 = $user->CTBUserStats->count50 + $score[5];
-            $user->CTBUserStats->countMiss = $user->CTBUserStats->countMiss + $score[8];
-            $user->CTBUserStats->ranked_score = $user->CTBUserStats->ranked_score + $score[9];
-            $user->CTBUserStats->playcount = $user->CTBUserStats->playcount + 1;
         }
         $user->CTBUserStats->total_score = $user->CTBUserStats->total_score + $score[9];
         $user->CTBUserStats->save();

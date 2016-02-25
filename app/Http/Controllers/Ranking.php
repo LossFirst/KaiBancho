@@ -82,18 +82,25 @@ class Ranking extends Controller
         $rankingLib = new Scores();
         $helper = new Helper();
         $score = explode(":", $helper->decrypt($request->input('score'), $request->input('iv'), $request->input('osuver')));
-        $mods = $rankingLib->mods($score[13]);
-        if ($mods->autopilot == false && $mods->autoplay == false && $mods->relax == false) {
-            $beatmap = OsuBeatmaps::where('checksum', $score[0])->first();
-            if ($beatmap !== null) {
-                if($score[15] === "0")
-                    $rankingLib->submitOsuScore($beatmap, $score, $mods);
-                elseif($score[15] === "1")
-                    $rankingLib->submitTaikoScore($beatmap, $score, $mods);
-                elseif($score[15] === "2")
-                    $rankingLib->submitCTBScore($beatmap, $score, $mods);
-                else
-                    $rankingLib->submitManiaScore($beatmap, $score, $mods);
+        if($request->hasFile('score')) {
+            $mods = $rankingLib->mods($score[13]);
+            if ($mods->autopilot == false && $mods->autoplay == false && $mods->relax == false) {
+                $currentTime = Carbon::now();
+                $user = User::where('name', $score[1])->first();
+                $beatmap = OsuBeatmaps::where('checksum', $score[0])->first();
+                $fileName = sprintf("replay_%s_%d_%d.osr", $beatmap->checksum, $user->id, strtotime($currentTime));
+                Log::info($fileName);
+                $request->file('score')->move(base_path() . config('bancho.replayDestination'), $fileName);
+                if ($beatmap !== null) {
+                    if ($score[15] === "0")
+                        $rankingLib->submitOsuScore($beatmap, $score, $mods, $currentTime);
+                    elseif ($score[15] === "1")
+                        $rankingLib->submitTaikoScore($beatmap, $score, $mods, $currentTime);
+                    elseif ($score[15] === "2")
+                        $rankingLib->submitCTBScore($beatmap, $score, $mods, $currentTime);
+                    else
+                        $rankingLib->submitManiaScore($beatmap, $score, $mods, $currentTime);
+                }
             }
         }
         return "";

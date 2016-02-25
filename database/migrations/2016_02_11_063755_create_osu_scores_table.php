@@ -20,6 +20,7 @@ class CreateOsuScoresTable extends Migration
             $table->integer('user_id')->unsigned();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->integer('score');
+            $table->integer('pp')->length(10)->default(0);
             $table->enum('rank', ['0','A','B','C','D','S','SH','X','XH','F'])->default('F');
             $table->integer('combo')->length(9);
             $table->integer('count50')->length(9);

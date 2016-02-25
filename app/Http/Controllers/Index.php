@@ -75,31 +75,11 @@ class Index extends Controller
             $user = Auth::user();
             $banInfo = UserBan::where('user_id', $user->id)->orderBy('created_at', 'desc')->first();
             Log::info($banInfo);
-            if($banInfo === null) {
-                Log::info($username . " has logged in");
-                $player->setStatus($user->id, array('SongName' => '', 'SongChecksum' => '', 'Mode' => 0, 'Status' => 0));
-                $output = array_merge(
-                    $packet->create(Packets::OUT_LoginRequest, $user->id),
-                    $packet->create(Packets::OUT_Protocol, config('bancho.ProtocolVersion')),
-                    $packet->create(Packets::OUT_UserGroup, $user->usergroup),
-                    $packet->create(Packets::OUT_UserFriends, $player->getFriends($user->id)),    //friend list
-                    $packet->create(Packets::OUT_PlayerLocaleInfo, $player->getData($user)),
-                    $packet->create(Packets::OUT_ChannelsLoaded, null),
-                    $packet->create(Packets::OUT_ChannelJoined, '#osu'),
-                    $packet->create(Packets::OUT_ChannelJoined, '#news'),
-                    $packet->create(Packets::OUT_ChannelList, array('#osu', 'Main channel', 2147483647 - 1)),
-                    $packet->create(Packets::OUT_ChannelList, array('#news', 'This will contain announcements and info, while beta lasts.', 1))
-                );
-                $player->setToken($token, $user);
+            if(config('bancho.maintenanceMode') && $user->usergroup < 10)
+            {
+                $output = $packet->create(Packets::OUT_LoginRequest, -6);
             } else {
-                $currentTime = Carbon::now();
-                if($banInfo->length < $currentTime->timestamp) {
-                    Log::info($username . " is banned");
-                    $output = array_merge(
-                        $packet->create(Packets::OUT_LoginRequest, -4),
-                        $packet->create(Packets::OUT_BanStatus, $banInfo->length)
-                    );
-                } else {
+                if ($banInfo === null) {
                     Log::info($username . " has logged in");
                     $player->setStatus($user->id, array('SongName' => '', 'SongChecksum' => '', 'Mode' => 0, 'Status' => 0));
                     $output = array_merge(
@@ -111,10 +91,35 @@ class Index extends Controller
                         $packet->create(Packets::OUT_ChannelsLoaded, null),
                         $packet->create(Packets::OUT_ChannelJoined, '#osu'),
                         $packet->create(Packets::OUT_ChannelJoined, '#news'),
-                        $packet->create(Packets::OUT_ChannelList, array('#osu', 'Main channel', 2147483647 - 1)),
+                        $packet->create(Packets::OUT_ChannelList, array('#osu', 'Main channel', 1)),
                         $packet->create(Packets::OUT_ChannelList, array('#news', 'This will contain announcements and info, while beta lasts.', 1))
                     );
                     $player->setToken($token, $user);
+                } else {
+                    $currentTime = Carbon::now();
+                    if ($banInfo->length < $currentTime->timestamp) {
+                        Log::info($username . " is banned");
+                        $output = array_merge(
+                            $packet->create(Packets::OUT_LoginRequest, -4),
+                            $packet->create(Packets::OUT_BanStatus, $banInfo->length)
+                        );
+                    } else {
+                        Log::info($username . " has logged in");
+                        $player->setStatus($user->id, array('SongName' => '', 'SongChecksum' => '', 'Mode' => 0, 'Status' => 0));
+                        $output = array_merge(
+                            $packet->create(Packets::OUT_LoginRequest, $user->id),
+                            $packet->create(Packets::OUT_Protocol, config('bancho.ProtocolVersion')),
+                            $packet->create(Packets::OUT_UserGroup, $user->usergroup),
+                            $packet->create(Packets::OUT_UserFriends, $player->getFriends($user->id)),    //friend list
+                            $packet->create(Packets::OUT_PlayerLocaleInfo, $player->getData($user)),
+                            $packet->create(Packets::OUT_ChannelsLoaded, null),
+                            $packet->create(Packets::OUT_ChannelJoined, '#osu'),
+                            $packet->create(Packets::OUT_ChannelJoined, '#news'),
+                            $packet->create(Packets::OUT_ChannelList, array('#osu', 'Main channel', 2147483647 - 1)),
+                            $packet->create(Packets::OUT_ChannelList, array('#news', 'This will contain announcements and info, while beta lasts.', 1))
+                        );
+                        $player->setToken($token, $user);
+                    }
                 }
             }
         } else {

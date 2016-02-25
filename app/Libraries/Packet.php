@@ -136,8 +136,7 @@ class Packet {
                     $output = $this->create(Packets::OUT_HandleStatsUpdate ,$player->getDataDetailed($player->getDatafromID($userID)));
                     break;
                 case Packets::IN_KeepAlive:
-                    $message = new RedisMessage();
-                    $output = array_merge($message->GetMessage($userID), $player->getOnline());
+                    $output = $player->getOnlineDetailed($player->getFriends($userID));
                     break;
                 case Packets::IN_StartSpectating:
                 case Packets::IN_StopSpectating:
@@ -193,6 +192,8 @@ class Packet {
                     Log::info(sprintf("PACKET: %s", implode(array_map("chr", $data))));
                     break;
             }
+            $message = new RedisMessage();
+            $output = array_merge($output, $message->GetMessage($userID), $player->getOnline());
         }
         return implode(array_map("chr", $output));
     }
