@@ -88,9 +88,11 @@ class Ranking extends Controller
                 $currentTime = Carbon::now();
                 $user = User::where('name', $score[1])->first();
                 $beatmap = OsuBeatmaps::where('checksum', $score[0])->first();
-                $fileName = sprintf("replay_%d%d%d.osr", $beatmap->beatmap_id, $user->id, strtotime($currentTime));
-                Log::info($fileName);
-                $request->file('score')->move(base_path() . config('bancho.replayDestination'), $fileName);
+                if($score[14] === 'True')
+                {
+                    $fileName = sprintf("replay_%d%d%d.osr", $beatmap->beatmap_id, $user->id, strtotime($currentTime));
+                    $request->file('score')->move(base_path() . config('bancho.replayDestination'), $fileName);
+                }
                 if ($beatmap !== null) {
                     if ($score[15] === "0")
                         $rankingLib->submitOsuScore($beatmap, $score, $mods, $currentTime);

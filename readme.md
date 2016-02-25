@@ -1,6 +1,6 @@
 ## KaiBancho!web
 
-[![Build Status](https://travis-ci.org/Itsyuka/KaiBancho.svg)](https://travis-ci.org/Itsyuka/KaiBancho) [![AGPL V3 Licence](https://img.shields.io/badge/license-AGPL%20V3-blue.svg)](LICENCE) [![Discord](https://img.shields.io/badge/chat-Discord-blue.svg)](https://discord.gg/0q2Z33UAJdbGLUEM)
+[![Build Status](https://travis-ci.org/Itsyuka/KaiBancho.svg)](https://travis-ci.org/Itsyuka/KaiBancho) [![AGPL V3 Licence](https://img.shields.io/badge/license-AGPL%20V3-blue.svg)](LICENCE) [![Discord](https://img.shields.io/badge/chat-Discord-blue.svg)](https://discord.gg/0qfnq2EvWlsnUvgD)
 
 A framework I am creating for fun and educational purposes, thus the reason I picked the license. (IMO play osu! on the real servers as it was intended.)
 
@@ -17,10 +17,13 @@ A framework I am creating for fun and educational purposes, thus the reason I pi
 - [X] Online user list
 - [X] Packet Receiving
 - [ ] Spectating
-- [X] PP (Super simple, needs to be extended)
+- [X] PP (Needs to be tweaked for other modes)
 - [X] Global Ranks
-- [ ] Country Ranks (Fairly easy to do now)
+- [ ] Country Ranks
+- [ ] Friend Ranks
 - [X] Accuracy
+- [X] Levels
+- [X] Replays (Upload and download)
 
 
 ## How-to
