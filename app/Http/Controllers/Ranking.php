@@ -61,7 +61,7 @@ class Ranking extends Controller
         $selfrank = $rankingLib->getUserRanking($request->query('c'), $user, $request->query('m'));
         if(!is_null($selfrank))
         {
-            $output .= $helper->scoreString($selfrank->id, $user->name, $selfrank->score, $selfrank->combo, $selfrank->count50, $selfrank->count100, $selfrank->count300, $selfrank->countMiss, $selfrank->countKatu, $selfrank->countGeki, $selfrank->fc, $selfrank->mods, $selfrank->user_id, $selfrank->rank, strtotime($selfrank->created_at));
+            $output .= $helper->scoreString(sprintf("%d%d%d", $beatmap->beatmap_id, $user->id, strtotime($selfrank->created_at)), $user->name, $selfrank->score, $selfrank->combo, $selfrank->count50, $selfrank->count100, $selfrank->count300, $selfrank->countMiss, $selfrank->countKatu, $selfrank->countGeki, $selfrank->fc, $selfrank->mods, $selfrank->user_id, $selfrank->rank, strtotime($selfrank->created_at));
         }
         else
         {
@@ -71,7 +71,7 @@ class Ranking extends Controller
         foreach ($ranking as $rank)
         {
             $player = User::find($rank->user_id);
-            $output .= $helper->scoreString($rank->id, $player->name, $rank->score, $rank->combo, $rank->count50, $rank->count100, $rank->count300, $rank->countMiss, $rank->countKatu, $rank->countGeki, $rank->fc, $rank->mods, $rank->user_id, $rank->rank, strtotime($rank->created_at));
+            $output .= $helper->scoreString(sprintf("%d%d%d", $beatmap->beatmap_id, $player->id, strtotime($rank->created_at)), $player->name, $rank->score, $rank->combo, $rank->count50, $rank->count100, $rank->count300, $rank->countMiss, $rank->countKatu, $rank->countGeki, $rank->fc, $rank->mods, $rank->user_id, $rank->rank, strtotime($rank->created_at));
         }
         return $output;
     }
@@ -88,7 +88,7 @@ class Ranking extends Controller
                 $currentTime = Carbon::now();
                 $user = User::where('name', $score[1])->first();
                 $beatmap = OsuBeatmaps::where('checksum', $score[0])->first();
-                $fileName = sprintf("replay_%s_%d_%d.osr", $beatmap->checksum, $user->id, strtotime($currentTime));
+                $fileName = sprintf("replay_%d%d%d.osr", $beatmap->beatmap_id, $user->id, strtotime($currentTime));
                 Log::info($fileName);
                 $request->file('score')->move(base_path() . config('bancho.replayDestination'), $fileName);
                 if ($beatmap !== null) {
@@ -104,5 +104,10 @@ class Ranking extends Controller
             }
         }
         return "";
+    }
+
+    public function getReplay(Request $request)
+    {
+        return response()->download(sprintf("%s%s/replay_%d.osr", base_path(), config('bancho.replayDestination'), $request->query('c')));
     }
 }

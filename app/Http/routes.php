@@ -109,6 +109,8 @@ Route::get('/web/lastfm.php', function() {
 Route::get('/web/check-updates.php', function() {
     return '[{}]';
 });
+Route::get('/web/osu-getreplay.php', "Ranking@getReplay");
+Route::get('/w/web/osu-getreplay.php', "Ranking@getReplay");
 Route::post('/', 'Index@postIndex');
 Route::get('/{section}', 'Debug@getDebug')->where(['section' => '.*']);
 Route::post('/{section}', 'Debug@postDebug')->where(['section' => '.*']);
