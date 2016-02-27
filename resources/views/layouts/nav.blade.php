@@ -2,7 +2,7 @@
     <nav class="navbar navbar-static-top">
         <div class="container">
             <div class="navbar-header">
-                <a href="{{ url("/") }}" class="navbar-brand"><b>Kai</b>Bancho</a>
+                <a href="{{ url('/', [], (Request::server('HTTP_X_FORWARDED_PROTO') == 'https')?true:false) }}" class="navbar-brand"><b>Kai</b>Bancho</a>
                 <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
                     <i class="fa fa-bars"></i>
                 </button>
@@ -45,7 +45,7 @@
                             <ul class="dropdown-menu">
                                 <!-- Menu Body -->
                                 <li class="user-body">
-                                    <form class="form-horizontal" role="form" method="POST" action="{{ url('/login') }}">
+                                    <form class="form-horizontal" role="form" method="POST" action="{{ url('/login', [], (Request::server('HTTP_X_FORWARDED_PROTO') == 'https')?true:false) }}">
                                         {!! csrf_field() !!}
                                         <div class="form-group{{ $errors->has('email') ? ' has-error has-feedback' : '' }}">
                                             <div class="col-sm-10 col-sm-offset-1">
@@ -85,28 +85,28 @@
                                         <div class="form-group">
                                             <div class="col-sm-offset-1 col-sm-12">
                                                 <button type="submit" class="btn btn-default">Sign in</button>
-                                                <a class="btn btn-link" href="{{ url('/password/reset') }}">Forgot Your Password?</a>
+                                                <a class="btn btn-link" href="{{ url('/password/reset', [], (Request::server('HTTP_X_FORWARDED_PROTO') == 'https')?true:false) }}">Forgot Your Password?</a>
                                             </div>
                                         </div>
                                     </form>
                                 </li>
                             </ul>
                         </li>
-                        <li><a href="{{ url('/register') }}">Register</a></li>
+                        <li><a href="{{ url('/register', [], (Request::server('HTTP_X_FORWARDED_PROTO') == 'https')?true:false) }}">Register</a></li>
                     @else
                         <!-- User Account Menu -->
                         <li class="dropdown user user-menu">
                             <!-- Menu Toggle Button -->
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                 <!-- The user image in the navbar-->
-                                <img src="{{ url("/".Auth::user()->id) }}" class="user-image" alt="User Image">
+                                <img src="{{ url('/', [Auth::user()->id], (Request::server('HTTP_X_FORWARDED_PROTO') == 'https')?true:false) }}" class="user-image" alt="User Image">
                                 <!-- hidden-xs hides the username on small devices so only the image appears. -->
                                 <span class="hidden-xs">{{ auth()->user()->name }}</span>
                             </a>
                             <ul class="dropdown-menu">
                                 <!-- The user image in the menu -->
                                 <li class="user-header" style="background: url('http://new.ppy.sh/images/headers/profile-covers/c1.jpg'); background-size: cover; background-position: center;">
-                                    <img src="{{ url("/".Auth::user()->id) }}" class="img-circle" alt="User Image">
+                                    <img src="{{ url('/', [Auth::user()->id], (Request::server('HTTP_X_FORWARDED_PROTO') == 'https')?true:false) }}" class="img-circle" alt="User Image">
 
                                     <p>
                                         {{ Auth::user()->name }}
@@ -116,10 +116,10 @@
                                 <!-- Menu Footer-->
                                 <li class="user-footer">
                                     <div class="pull-left">
-                                        <a href="/u/{{ Auth::user()->id }}" class="btn btn-default btn-flat">Profile</a>
+                                        <a href="{{ url('/u',[Auth::user()->id], (Request::server('HTTP_X_FORWARDED_PROTO') == 'https')?true:false) }}" class="btn btn-default btn-flat">Profile</a>
                                     </div>
                                     <div class="pull-right">
-                                        <a href="{{ url('/logout') }}" class="btn btn-default btn-flat">Sign out</a>
+                                        <a href="{{ url('/logout', [], (Request::server('HTTP_X_FORWARDED_PROTO') == 'https')?true:false) }}" class="btn btn-default btn-flat">Sign out</a>
                                     </div>
                                 </li>
                             </ul>

@@ -26,28 +26,7 @@ class Helper {
     }
 
     public function generateToken() {
-        $characters = '0123456789abcdefghijklmnopqrstuvwxyz';
-        $charactersLength = strlen($characters);
-        $randomString = '';
-        for ($i = 0; $i < 8; $i++) {
-            $randomString .= $characters[rand(0, $charactersLength - 1)];
-        }
-        $randomString .= "-";
-        for ($i = 0; $i < 4; $i++) {
-            $randomString .= $characters[rand(0, $charactersLength - 1)];
-        }
-        $randomString .= "-";
-        for ($i = 0; $i < 4; $i++) {
-            $randomString .= $characters[rand(0, $charactersLength - 1)];
-        }
-        $randomString .= "-";
-        for ($i = 0; $i < 4; $i++) {
-            $randomString .= $characters[rand(0, $charactersLength - 1)];
-        }
-        $randomString .= "-";
-        for ($i = 0; $i < 12; $i++) {
-            $randomString .= $characters[rand(0, $charactersLength - 1)];
-        }
+        $randomString = sprintf("%s-%s-%s-%s-%s",str_random(8),str_random(4),str_random(4),str_random(4),str_random(12));
         return $randomString;
     }
 

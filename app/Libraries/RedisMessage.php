@@ -2,7 +2,6 @@
 
 namespace App\Libraries;
 
-use Carbon\Carbon;
 use Redis;
 use Log;
 

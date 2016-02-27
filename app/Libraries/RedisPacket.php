@@ -1,10 +1,21 @@
-<?php namespace App\Libraries; use Carbon\Carbon; use Redis; use Log; class RedisPacket {
-    public function GetPackets($userID)
+<?php
+namespace App\Libraries;
+
+use Redis;
+use Log;
+
+class RedisPacket {
+    public function GetPackets($userID, $packetID = "")
     {
         $redis = Redis::connection();
         $packet = new Packet();
         $redisPackets = array();
-        $values = $redis->keys(sprintf("packet:%d:*", $userID));
+        if(empty($packetID))
+        {
+            $values = $redis->keys(sprintf("packet:%d:*", $userID));
+        } else {
+            $values = $redis->keys(sprintf("packet:%d:%d:*", $userID, $packetID));
+        }
         if(!empty($values))
         {
             foreach($values as $value)
@@ -16,17 +27,27 @@
         }
         return $redisPackets;
     }
-    public function CreatePacket($userID, $packet, $packetData)
+
+    public function CreatePacket($userID, $packetID, $packetData)
     {
         $redis = Redis::connection();
         $player = new Player();
-        $timestamp = strtotime(Carbon::now());
-        $random = rand(1,1000);
+        $timestamp = $this->getTimestamp(true);
         if(!$player->isIDOnline($userID)) {
             return false;
         }
-        $redis->set(sprintf("packet:%d:%d:%s", $userID, $random, $timestamp), json_encode(array($packet, $packetData)));
-        $redis->expire(sprintf("packet:%d:%d:%s", $userID, $random, $timestamp), 30);
+        $redis->set(sprintf("packet:%d:%d:%s", $userID, $packetID, $timestamp), json_encode(array($packetID, $packetData)));
+        $redis->expire(sprintf("packet:%d:%d:%s", $userID, $packetID, $timestamp), 30);
         return true;
+    }
+
+    function getTimestamp($asString=false){
+        $seconds = microtime(true); // false = int, true = float
+        $stamp = round($seconds * 10000);
+        if($asString == true){
+            return sprintf('%.0f', $stamp);
+        } else {
+            return $stamp;
+        }
     }
 }
