@@ -3,6 +3,8 @@
 namespace App\Libraries;
 
 use Log;
+use App\Libraries\PhpBinaryReader\BinaryReader as BinaryReader;
+Use App\Libraries\PhpBinaryReader\Endian as Endian;
 
 class Packet {
     public function create($type, $data = null) {
@@ -73,12 +75,16 @@ class Packet {
                 }
                 $toreturn = array_merge($l1, $toreturn);
                 break;
+            case Packets::OUT_SpectatorFrames:
+                $toreturn = $data;
+                break;
             case Packets::OUT_LoginRequest:
             case Packets::OUT_HandleUserDisconnect:
             case Packets::OUT_UserGroup:
             case Packets::OUT_Protocol:
             case Packets::OUT_BanStatus:
             case Packets::OUT_RoomTitleChange:
+            case Packets::OUT_SpectatorJoin:
             default:
                 $toreturn = unpack('C*', pack('L*', $data));
                 break;
@@ -96,11 +102,15 @@ class Packet {
     {
         $output = array();
         $data = unpack('C*', $body); //For now for backwards compat till I convert the whole packet reading.
+        $br = new BinaryReader($body, Endian::ENDIAN_LITTLE);
+        $packetID = $br->readUInt16();
+        $br->readUBits(8); //Skip 1 byte
+        $packetLength = $br->readUInt32();
         if (is_array($data)) {
             $player = new Player();
             $helper = new Helper();
-            $packetNum = unpack('C', $body);
-            switch ($packetNum[1]) {
+            $redisPacket = new RedisPacket();
+            switch ($packetID) {
                 case Packets::IN_SetUserState:
                     $stuff = array();
                     $format = 'CPacket/x2/CLength/x3/CStatus/x/CSongLength';
@@ -112,10 +122,24 @@ class Packet {
                     $format = sprintf('@%d/x2/CMode/CThingOne/CThingTwo', $stuff['Length']);
                     $stuff = array_merge($stuff, unpack($format, $body));
                     $player->setStatus($userID, $stuff);
+
+                    // New method? Maybe a serializer? maybe
+                    $playerStatus = (object)array();
+                    $playerStatus->status = $br->readUBits(8);
+                    $br->readUBits(8);
+                    $SongLength = $br->readUInt8();
+                    $playerStatus->Song = ($SongLength != 0)?$br->readString($SongLength):"";
+                    $br->readUBits(8);
+                    $checksumLength = $br->readUInt8();
+                    $playerStatus->checksum = ($checksumLength != 0)?$br->readString($checksumLength):"";
+                    $br->readUBits(32);
+                    $playerStatus->mode = $br->readUInt8();
+                    log::info(json_encode($playerStatus));
                     break;
                 case Packets::IN_ReceivePM:
                 case Packets::IN_RecieveChatMSG: //Chat message
                     $messageData = array();
+                    log::info($data);
                     $format = 'CPacket/x2/CLength/x6/CMessageLength';
                     $messageData = array_merge($messageData, unpack($format, $body));
                     if($messageData['MessageLength'] > 127) {
@@ -139,7 +163,9 @@ class Packet {
                     $output = $player->getOnlineDetailed($player->getFriends($userID));
                     break;
                 case Packets::IN_StartSpectating:
+                    break;
                 case Packets::IN_StopSpectating:
+                    break;
                 case Packets::IN_SpectatingData:
                     break;
                 case Packets::IN_MPLeave:
@@ -200,10 +226,5 @@ class Packet {
 
     public function debug($data)
     {
-        $packet = unpack('C1', $data);
-        if($packet[1] == 78) //reduce results
-        {
-            //More Debugging soon
-        }
     }
 }
