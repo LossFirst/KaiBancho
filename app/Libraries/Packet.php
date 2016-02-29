@@ -16,6 +16,7 @@ class Packet {
             case Packets::OUT_ChannelJoined:
             case Packets::OUT_ChannelDeny:
             case Packets::OUT_SwitchTournyServer:
+            case Packets::OUT_Announcement:
             case Packets::OUT_BlackScreenNotification:
                 $toreturn = $helper->ULeb128($data);
                 break;
@@ -85,7 +86,6 @@ class Packet {
             case Packets::OUT_UserGroup:
             case Packets::OUT_Protocol:
             case Packets::OUT_BanStatus:
-            case Packets::OUT_RoomTitleChange:
             case Packets::OUT_SpectatorJoin:
             default:
                 $toreturn = unpack('C*', pack('L*', $data));
@@ -214,9 +214,9 @@ class Packet {
 
     public function debug($data)
     {
-        $br = new BinaryReader($data, Endian::ENDIAN_LITTLE);
-        $packetEnd = true;
-        while($packetEnd) {
+        $br = new BinaryReader($data);
+        $packetEnd = false;
+        while(!$packetEnd) {
             if($br->getPosition() != 0)
             {
                 if($br->getPosition() - $br->getEofPosition() <= 2)
@@ -233,7 +233,7 @@ class Packet {
             if($packetLength > $EOF - $position)
             {
                 Log::info("Invalid Packet!");
-                $packetEnd = false;
+                $packetEnd = true;
                 break;
             }
             switch($packetID)
@@ -242,14 +242,19 @@ class Packet {
                     $status = new bUserStatus();
                     $status->bUserStatus($br);
                     break;
+                case Packets::IN_KeepAlive:
+                    break;
                 case Packets::IN_ReceivePM:
                 case Packets::IN_RecieveChatMSG:
                     $chat = new bChat();
                     $chat->bChat($br);
                     break;
+                case Packets::IN_BeatmapInformation:
+                    $packetEnd = true;
+                    break;
                 default:
                     log::info(sprintf("Packet: %d || Length: %d", $packetID, $packetLength));
-                    $packetEnd = false;
+                    $packetEnd = true;
                     break;
             }
         }

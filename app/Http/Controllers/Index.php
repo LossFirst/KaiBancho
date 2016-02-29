@@ -95,7 +95,8 @@ class Index extends Controller
                         $packet->create(Packets::OUT_ChannelJoined, '#osu'),
                         $packet->create(Packets::OUT_ChannelJoined, '#news'),
                         $packet->create(Packets::OUT_ChannelList, array('#osu', 'Main channel', 1)),
-                        $packet->create(Packets::OUT_ChannelList, array('#news', 'This will contain announcements and info, while beta lasts.', 1))
+                        $packet->create(Packets::OUT_ChannelList, array('#news', 'This will contain announcements and info, while beta lasts.', 1)),
+                        $packet->create(Packets::OUT_Announcement, "http://puu.sh/jh7t7/20c04029ad.png|https://osu.ppy.sh/news/123912240253")
                     );
                     $player->setToken($token, $user);
                 } else {

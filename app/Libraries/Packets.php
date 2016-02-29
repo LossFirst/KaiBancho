@@ -80,7 +80,7 @@ class Packets
     const IN_AddFriend = 73;
     const IN_RemoveFriend = 74;
     const OUT_Protocol = 75;
-    const OUT_RoomTitleChange = 76;
+    const OUT_Announcement = 76;
     const IN_RoomChangeTeam = 77;
     const IN_LeaveChannel = 78;
     const IN_OnlinePlayers = 79;
