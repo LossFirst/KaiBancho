@@ -15,30 +15,28 @@ class bChat
         $stream->readUBits(8);
         $otherLength = $stream->readUInt8();
         $this->other = ($otherLength != 0)?$stream->readString($otherLength):"";
-        $Loop = false;
+        $over127 = false;
         while(true)
         {
             $bit = $stream->readUInt8();
-            if($Loop)
+            if(!$over127)
             {
-                if($bit == 11)
-                {
-                    $length = $stream->readUInt8();
-                    $this->reciever = ($length != 0)?$stream->readString($length):"";
-                    break;
-                }
-                $this->message .= chr($bit);
-            } else {
                 $length = $stream->readUInt8();
                 $pos = $stream->getPosition();
-                $test = $stream->readUInt8();
-                if($test != 2)
+                if($stream->readUInt8() != 2)
                 {
                     $stream->setPosition($pos);
                     $this->message = ($length != 0)?$stream->readString($length):"";
+                    $stream->readUInt8();
+                    break;
                 }
+            } else {
+                if($bit == 11) break;
+                $this->message .= chr($bit);
             }
-            $Loop = true;
+            $over127 = true;
         }
+        $length = $stream->readUInt8();
+        $this->reciever = ($length != 0)?$stream->readString($length):"";
     }
 }
