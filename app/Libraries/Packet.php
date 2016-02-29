@@ -2,6 +2,8 @@
 
 namespace App\Libraries;
 
+use App\Serializables\bChat;
+use App\Serializables\bUserStatus;
 use Log;
 use App\Libraries\PhpBinaryReader\BinaryReader as BinaryReader;
 Use App\Libraries\PhpBinaryReader\Endian as Endian;
@@ -122,24 +124,10 @@ class Packet {
                     $format = sprintf('@%d/x2/CMode/CThingOne/CThingTwo', $stuff['Length']);
                     $stuff = array_merge($stuff, unpack($format, $body));
                     $player->setStatus($userID, $stuff);
-
-                    // New method? Maybe a serializer? maybe
-                    $playerStatus = (object)array();
-                    $playerStatus->status = $br->readUBits(8);
-                    $br->readUBits(8);
-                    $SongLength = $br->readUInt8();
-                    $playerStatus->Song = ($SongLength != 0)?$br->readString($SongLength):"";
-                    $br->readUBits(8);
-                    $checksumLength = $br->readUInt8();
-                    $playerStatus->checksum = ($checksumLength != 0)?$br->readString($checksumLength):"";
-                    $br->readUBits(32);
-                    $playerStatus->mode = $br->readUInt8();
-                    log::info(json_encode($playerStatus));
                     break;
                 case Packets::IN_ReceivePM:
                 case Packets::IN_RecieveChatMSG: //Chat message
                     $messageData = array();
-                    log::info($data);
                     $format = 'CPacket/x2/CLength/x6/CMessageLength';
                     $messageData = array_merge($messageData, unpack($format, $body));
                     if($messageData['MessageLength'] > 127) {
@@ -226,5 +214,44 @@ class Packet {
 
     public function debug($data)
     {
+        $br = new BinaryReader($data, Endian::ENDIAN_LITTLE);
+        $packetEnd = true;
+        while($packetEnd) {
+            if($br->getPosition() != 0)
+            {
+                if($br->getPosition() - $br->getEofPosition() <= 2)
+                {
+                    break;
+                }
+                $br->readUBits(8);
+            }
+            $packetID = $br->readUInt16();
+            $br->readUBits(8);
+            $packetLength = $br->readUInt32();
+            $position = $br->getPosition();
+            $EOF = $br->getEofPosition();
+            if($packetLength > $EOF - $position)
+            {
+                Log::info("Invalid Packet!");
+                $packetEnd = false;
+                break;
+            }
+            switch($packetID)
+            {
+                case Packets::IN_SetUserState:
+                    $status = new bUserStatus();
+                    $status->bUserStatus($br);
+                    break;
+                case Packets::IN_ReceivePM:
+                case Packets::IN_RecieveChatMSG:
+                    $chat = new bChat();
+                    $chat->bChat($br);
+                    break;
+                default:
+                    log::info(sprintf("Packet: %d || Length: %d", $packetID, $packetLength));
+                    $packetEnd = false;
+                    break;
+            }
+        }
     }
 }
