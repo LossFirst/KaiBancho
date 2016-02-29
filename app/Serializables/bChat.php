@@ -19,18 +19,16 @@ class bChat
         while(true)
         {
             $bit = $stream->readUInt8();
-            if($bit == 11 && $Loop)
-            {
-                $length = $stream->readUInt8();
-                $this->reciever = ($length != 0)?$stream->readString($length):"";
-                break;
-            }
             if($Loop)
             {
+                if($bit == 11)
+                {
+                    $length = $stream->readUInt8();
+                    $this->reciever = ($length != 0)?$stream->readString($length):"";
+                    break;
+                }
                 $this->message .= chr($bit);
-            }
-            if(!$Loop)
-            {
+            } else {
                 $length = $stream->readUInt8();
                 $pos = $stream->getPosition();
                 $test = $stream->readUInt8();
