@@ -56,7 +56,7 @@ class String2 implements TypeInterface
                 if($length == 0) break;
                 $pos = $br->getPosition();
                 $checkNext = $br->readUInt8();
-                if($checkNext != 2 && $checkNext != 3)
+                if($checkNext >= 32) // TODO: actually check to see if next byte is the multiple and shift it. Otherwise max length can only be 255 * 31 till it crashes the client
                 {
                     $br->setPosition($pos);
                     $string = $br->readString($length);
