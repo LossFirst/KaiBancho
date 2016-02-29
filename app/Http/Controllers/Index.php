@@ -58,7 +58,10 @@ class Index extends Controller
         $player->updateToken($osutoken, $userID);
         $body = $request->getContent();
         $this->route = sprintf('%s packet %s', Route::getCurrentRoute()->getActionName(), (!empty($body)) ? unpack('C',$body)[1] : 'Null');
-        //$packet->debug($body);
+        if($userID == 1)
+        {
+            $packet->debug($body);
+        }
         $output = $packet->check($body, $userID, $osutoken);
         return response()->make($output)->withHeaders(['cho-protocol' => config('bancho.ProtocolVersion'), 'cho-token' => $osutoken]);
     }

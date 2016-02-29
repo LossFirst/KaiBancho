@@ -2,6 +2,8 @@
 
 namespace App\Serializables;
 
+use App\Libraries\PhpBinaryReader\BinaryReader;
+
 class bUserStatus
 {
     public $beatmap;
@@ -11,15 +13,11 @@ class bUserStatus
     public $playMode;
     public $status;
 
-    public function bUserStatus(&$stream)
+    public function bUserStatus(BinaryReader &$stream)
     {
         $this->status = $stream->readUBits(8);
-        $stream->readUBits(8);
-        $beatmapLength = $stream->readUInt8();
-        $this->beatmap = ($beatmapLength != 0)?$stream->readString($beatmapLength):"";
-        $stream->readUBits(8);
-        $hashLength = $stream->readUInt8();
-        $this->beatmapHash = ($hashLength != 0)?$stream->readString($hashLength):"";
+        $this->beatmap = $stream->readULEB128();
+        $this->beatmapHash = $stream->readULEB128();
         $stream->readUBits(32);
         $this->playMode = $stream->readUInt8();
         $this->something = $stream->readUInt32();

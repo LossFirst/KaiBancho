@@ -225,6 +225,14 @@ class BinaryReader
     }
 
     /**
+     * @return string
+     */
+    public function readULEB128()
+    {
+        return $this->stringReader->readULEB128($this);
+    }
+
+    /**
      * @param  int   $machineByteOrder
      * @return $this
      */

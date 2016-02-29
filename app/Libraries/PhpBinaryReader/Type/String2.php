@@ -25,6 +25,7 @@ class String2 implements TypeInterface
         $str = $br->readFromHandle($length);
         return $str;
     }
+
     /**
      * @param  \App\Libraries\PhpBinaryReader\BinaryReader $br
      * @param  int                           $length
@@ -34,5 +35,40 @@ class String2 implements TypeInterface
     {
         $br->align();
         return $this->read($br, $length);
+    }
+
+    /**
+     * @param BinaryReader $br
+     * @return string
+     */
+    public function readULEB128(BinaryReader &$br)
+    {
+        $isLong = false;
+        $string = "";
+        while(true)
+        {
+            $pos = $br->getPosition();
+            $bit = $br->readUInt8();
+            if(!$isLong)
+            {
+                if($bit != 11) throw new InvalidDataException('The string isn\'t a Unsigned LEB128');
+                $length = $br->readUInt8();
+                if($length == 0) break;
+                $pos = $br->getPosition();
+                $checkNext = $br->readUInt8();
+                if($checkNext != 2 && $checkNext != 3)
+                {
+                    $br->setPosition($pos);
+                    $string = $br->readString($length);
+                    break;
+                }
+            } else {
+                if($bit == 11) {$br->setPosition($pos); break;}
+                $string .= chr($bit);
+            }
+            $isLong = true;
+        }
+
+        return $string;
     }
 }
