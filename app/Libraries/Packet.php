@@ -18,7 +18,7 @@ class Packet {
             case Packets::OUT_SwitchTournyServer:
             case Packets::OUT_Announcement:
             case Packets::OUT_BlackScreenNotification:
-                $toreturn = $helper->ULeb128($data);
+                $toreturn = $helper->uencode($data);
                 break;
             case Packets::OUT_Popup:
             case Packets::OUT_RoomHostTransferred:
@@ -28,7 +28,7 @@ class Packet {
             case Packets::OUT_PlayerLocaleInfo:
                 $toreturn = array_merge(
                     unpack('C*', pack('L*', $data['id'])),
-                    $helper->ULeb128($data['playerName']),
+                    $helper->uencode($data['playerName']),
                     unpack('C*', pack('C*', $data['utcOffset'])),
                     unpack('C*', pack('C*', $data['country'])),
                     unpack('C*', pack('C*', $data['playerRank'])),
@@ -41,8 +41,8 @@ class Packet {
                 $toreturn = array_merge(
                     unpack('C*', pack('L*', $data['id'])),
                     unpack('C*', pack('C*', $data['bStatus'])),
-                    $helper->ULeb128($data['string0']),
-                    $helper->ULeb128($data['string1']),
+                    $helper->uencode($data['string0']),
+                    $helper->uencode($data['string1']),
                     unpack('C*', pack('L*', $data['mods'])),
                     unpack('C*', pack('C*', $data['playmode'])),
                     unpack('C*', pack('L*', $data['int0'])),
@@ -56,16 +56,16 @@ class Packet {
                 break;
             case Packets::OUT_ChannelList:
                 $toreturn = array_merge(
-                    $helper->ULeb128($data[0]),
-                    $helper->ULeb128($data[1]),
+                    $helper->uencode($data[0]),
+                    $helper->uencode($data[1]),
                     unpack('C*', pack('S*', $data[2]))
                 );
                 break;
             case Packets::OUT_SendChatMSG:
                 $toreturn = array_merge(
-                    $helper->ULeb128($data[0]),
-                    $helper->ULeb128($data[1]),
-                    $helper->ULeb128($data[2]),
+                    $helper->uencode($data[0]),
+                    $helper->uencode($data[1]),
+                    $helper->uencode($data[2]),
                     unpack('C*', pack('I', $data[3]))
                 );
                 break;

@@ -3,15 +3,46 @@
 namespace App\Libraries;
 
 class Helper {
-    public function ULeb128($string) {
-        if ($string == '') return array(0);
-        if(strlen($string) < 127)
-        {
-            $output = array_merge(array(11, strlen($string)), unpack('C*',$string));
-        } else {
-            $output = array_merge(array(11), unpack('C*', pack('v*', strlen($string)+1)), unpack('C*',$string));
+    public function uencode($string){
+        $length = strlen($string);
+        if($length == 0){
+            return array(11, 0);
         }
-        return $output;
+        $str = '';
+        do{
+            $char = $length & 0x7f;
+            $length >>= 7;
+            if($length > 0){
+                $char |= 0x80;
+            }
+            $str .= chr($char);
+        }while($length);
+        $str .= $string;
+        return array_merge(array(11), unpack('C*', $str));
+    }
+
+    public function udecode($str, &$x, $maxlen = 16){
+        $len = 0;
+        $x = 0;
+        while($str){
+            $char = substr($str, 0, 1);
+            $char = ord($char);
+            $str = substr($str, 1);
+
+            $x |= ($char & 0x7f) << (7 * $len);
+            $len++;
+
+            #Bin::debugInt($char);
+
+            if(($char & 0x80) == 0){
+                break;
+            }
+
+            if($len >= $maxlen){
+                return false;
+            }
+        }
+        return $len;
     }
 
     public function GetLongBytes($long) {

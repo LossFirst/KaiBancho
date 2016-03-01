@@ -2,6 +2,7 @@
 
 namespace App\Libraries\PhpBinaryReader\Type;
 
+use App\Libraries\Helper;
 use App\Libraries\PhpBinaryReader\BinaryReader;
 use App\Libraries\PhpBinaryReader\Exception\InvalidDataException;
 
@@ -43,32 +44,19 @@ class String2 implements TypeInterface
      */
     public function readULEB128(BinaryReader &$br)
     {
-        $isLong = false;
+        $helper = new Helper();
         $string = "";
-        while(true)
-        {
-            $pos = $br->getPosition();
-            $bit = $br->readUInt8();
-            if(!$isLong)
-            {
-                if($bit != 11) throw new InvalidDataException('The string isn\'t a Unsigned LEB128');
-                $length = $br->readUInt8();
-                if($length == 0) break;
-                $pos = $br->getPosition();
-                $checkNext = $br->readUInt8();
-                if($checkNext >= 32) // TODO: actually check to see if next byte is the multiple and shift it. Otherwise max length can only be 255 * 31 till it crashes the client
-                {
-                    $br->setPosition($pos);
-                    $string = $br->readString($length);
-                    break;
-                }
-            } else {
-                if($bit == 11 || $bit == 0) {$br->setPosition($pos); break;}
-                $string .= chr($bit);
-            }
-            $isLong = true;
-        }
 
+        $byte = ord($br->readBytes(1)); // Is it 11?
+        if($byte != 11) throw new InvalidDataException('The string isn\'t an Unsigned LEB128');
+        $lengthByte = ord($br->readBytes(1));
+        if($lengthByte == 0) return $string;
+        $pos = $br->getPosition();
+        $shiftByte = ord($br->readBytes(1));
+        $length = 0;
+        $shift = $helper->udecode(chr($lengthByte).chr($shiftByte), $length);
+        if($shift == 1) $br->setPosition($pos);
+        $string = $br->readString($length);
         return $string;
     }
 }
