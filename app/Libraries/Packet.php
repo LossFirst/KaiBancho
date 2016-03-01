@@ -218,9 +218,9 @@ class Packet {
         $stream = new BinaryReader($data);
         $packetEnd = false;
         while(!$packetEnd) {
-            $bUserStatus = new bUserStatus();
-            $bUserList = new bUserList();
-            $bChat = new bChat();
+            $bUserStatus = new bUserStatus($stream);
+            $bUserList = new bUserList($stream);
+            $bChat = new bChat($stream);
             $redisPacket = new RedisPacket();
             if($stream->getPosition() != 0)
             {
@@ -237,16 +237,16 @@ class Packet {
             switch($packetID)
             {
                 case Packets::IN_SetUserState:
-                    $bUserStatus->readUserStatus($stream);
+                    $bUserStatus->readUserStatus();
                     break;
                 case Packets::IN_KeepAlive:
                     break;
                 case Packets::IN_ReceivePM:
                 case Packets::IN_RecieveChatMSG:
-                    $bChat->readMessage($stream);
+                    $bChat->readMessage();
                     break;
                 case Packets::IN_OnlineStats:
-                    $bUserList->getOnlineStats($stream);
+                    $bUserList->getOnlineStats();
                     break;
                 case Packets::IN_BeatmapInformation:
                     $packetEnd = true;
@@ -264,11 +264,11 @@ class Packet {
                     $packetEnd = true;
                     break;
                 case Packets::IN_LeaveChannel:
-                    $bChat->readChannel($stream);
+                    $bChat->readChannel();
                     $bChat->leaveChannel($userID);
                     break;
                 case Packets::IN_JoinChannel:
-                    $bChat->readChannel($stream);
+                    $bChat->readChannel();
                     $bChat->joinChannel($userID);
                     break;
                 case Packets::IN_AddFriend:

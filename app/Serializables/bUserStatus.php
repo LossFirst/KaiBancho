@@ -13,15 +13,21 @@ class bUserStatus
     public $mods = 0;
     public $playMode = 0;
     public $status = 0;
+    private $stream;
 
-    public function readUserStatus(BinaryReader &$stream)
+    public function __construct(BinaryReader &$stream)
     {
-        $this->status = ord($stream->readBytes(1));
-        $this->beatmap = $stream->readULEB128();
-        $this->beatmapHash = $stream->readULEB128();
-        $this->mods = $stream->readUInt32();
-        $this->playMode = $stream->readUInt8();
-        $this->something = $stream->readUInt32();
+        $this->stream = $stream;
+    }
+
+    public function readUserStatus()
+    {
+        $this->status = ord($this->stream->readBytes(1));
+        $this->beatmap = $this->stream->readULEB128();
+        $this->beatmapHash = $this->stream->readULEB128();
+        $this->mods = $this->stream->readUInt32();
+        $this->playMode = $this->stream->readUInt8();
+        $this->something = $this->stream->readUInt32();
     }
 
     public function updateUserStatus($userID)

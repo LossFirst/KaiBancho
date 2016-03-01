@@ -12,17 +12,23 @@ class bChat
     public $reciever = "";
     public $other = "";
     public $channel = "";
+    private $stream;
 
-    public function readMessage(BinaryReader &$stream)
+    public function __construct(BinaryReader &$stream)
     {
-        $this->other = $stream->readULEB128();
-        $this->message = $stream->readULEB128();
-        $this->reciever = $stream->readULEB128();
+        $this->stream = $stream;
     }
 
-    public function readChannel(BinaryReader &$stream)
+    public function readMessage()
     {
-        $this->channel = $stream->readULEB128();
+        $this->other = $this->stream->readULEB128();
+        $this->message = $this->stream->readULEB128();
+        $this->reciever = $this->stream->readULEB128();
+    }
+
+    public function readChannel()
+    {
+        $this->channel = $this->stream->readULEB128();
     }
 
     public function joinChannel($userID)
