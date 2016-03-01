@@ -49,12 +49,12 @@ class String2 implements TypeInterface
 
         $byte = ord($br->readBytes(1)); // Is it 11?
         if($byte != 11) throw new InvalidDataException('The string isn\'t an Unsigned LEB128');
-        $lengthByte = ord($br->readBytes(1));
-        if($lengthByte == 0) return $string;
+        $lengthByte = $br->readBytes(1);
+        if(ord($lengthByte) == 0) return $string;
         $pos = $br->getPosition();
-        $shiftByte = ord($br->readBytes(1));
+        $shiftByte = $br->readBytes(1);
         $length = 0;
-        $shift = $helper->udecode(chr($lengthByte).chr($shiftByte), $length);
+        $shift = $helper->udecode($lengthByte.$shiftByte, $length);
         if($shift == 1) $br->setPosition($pos);
         $string = $br->readString($length);
         return $string;

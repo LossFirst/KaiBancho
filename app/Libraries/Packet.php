@@ -3,6 +3,7 @@
 namespace App\Libraries;
 
 use App\Serializables\bChat;
+use App\Serializables\bUserList;
 use App\Serializables\bUserStatus;
 use Log;
 use App\Libraries\PhpBinaryReader\BinaryReader as BinaryReader;
@@ -223,10 +224,10 @@ class Packet {
                 {
                     break;
                 }
-                $br->readUBits(8);
+                $br->readBytes(1);
             }
             $packetID = $br->readUInt16();
-            $br->readUBits(8);
+            $br->readBytes(1);
             $packetLength = $br->readUInt32();
             $position = $br->getPosition();
             $EOF = $br->getEofPosition();
@@ -248,6 +249,10 @@ class Packet {
                 case Packets::IN_RecieveChatMSG:
                     $chat = new bChat();
                     $chat->bChat($br);
+                    break;
+                case Packets::IN_OnlineStats:
+                    $userList = new bUserList();
+                    $userList->listUserData($br);
                     break;
                 case Packets::IN_BeatmapInformation:
                     $packetEnd = true;

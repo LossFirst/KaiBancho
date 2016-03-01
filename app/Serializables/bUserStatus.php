@@ -15,10 +15,10 @@ class bUserStatus
 
     public function bUserStatus(BinaryReader &$stream)
     {
-        $this->status = $stream->readUBits(8);
+        $this->status = ord($stream->readBytes(1));
         $this->beatmap = $stream->readULEB128();
         $this->beatmapHash = $stream->readULEB128();
-        $stream->readUBits(32);
+        $this->mods = $stream->readUInt32();
         $this->playMode = $stream->readUInt8();
         $this->something = $stream->readUInt32();
     }

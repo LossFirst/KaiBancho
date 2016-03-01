@@ -38,9 +38,7 @@ class Helper {
                 break;
             }
 
-            if($len >= $maxlen){
-                return false;
-            }
+            if($len >= $maxlen) throw new \RuntimeException('String is greater than max length');
         }
         return $len;
     }
