@@ -63,7 +63,7 @@ class String2 implements TypeInterface
                     break;
                 }
             } else {
-                if($bit == 11) {$br->setPosition($pos); break;}
+                if($bit == 11 || $bit == 0) {$br->setPosition($pos); break;}
                 $string .= chr($bit);
             }
             $isLong = true;
