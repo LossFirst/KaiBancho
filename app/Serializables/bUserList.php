@@ -8,7 +8,7 @@ class bUserList
 {
     public $userList;
 
-    public function listUserData(BinaryReader &$stream)
+    public function getOnlineStats(BinaryReader &$stream)
     {
         $stream->readBytes(2);
         while(true)

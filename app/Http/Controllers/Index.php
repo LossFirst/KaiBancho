@@ -60,7 +60,7 @@ class Index extends Controller
         $this->route = sprintf('%s packet %s', Route::getCurrentRoute()->getActionName(), (!empty($body)) ? unpack('C',$body)[1] : 'Null');
         if($userID == 1)
         {
-            $packet->debug($body);
+            $packet->debug($body, $userID);
         }
         $output = $packet->check($body, $userID, $osutoken);
         return response()->make($output)->withHeaders(['cho-protocol' => config('bancho.ProtocolVersion'), 'cho-token' => $osutoken]);

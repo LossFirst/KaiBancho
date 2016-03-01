@@ -105,10 +105,10 @@ class Packet {
     {
         $output = array();
         $data = unpack('C*', $body); //For now for backwards compat till I convert the whole packet reading.
-        $br = new BinaryReader($body, Endian::ENDIAN_LITTLE);
-        $packetID = $br->readUInt16();
-        $br->readUBits(8); //Skip 1 byte
-        $packetLength = $br->readUInt32();
+        $stream = new BinaryReader($body, Endian::ENDIAN_LITTLE);
+        $packetID = $stream->readUInt16();
+        $stream->readUBits(8); //Skip 1 byte
+        $packetLength = $stream->readUInt32();
         if (is_array($data)) {
             $player = new Player();
             $helper = new Helper();
@@ -213,48 +213,68 @@ class Packet {
         return implode(array_map("chr", $output));
     }
 
-    public function debug($data)
+    public function debug($data, $userID)
     {
-        $br = new BinaryReader($data);
+        $stream = new BinaryReader($data);
         $packetEnd = false;
         while(!$packetEnd) {
-            if($br->getPosition() != 0)
+            $bUserStatus = new bUserStatus();
+            $bUserList = new bUserList();
+            $bChat = new bChat();
+            $redisPacket = new RedisPacket();
+            if($stream->getPosition() != 0)
             {
-                if($br->getPosition() - $br->getEofPosition() <= 2)
+                if($stream->getPosition() - $stream->getEofPosition() <= 2)
                 {
                     break;
                 }
-                $br->readBytes(1);
+                $stream->readBytes(1);
             }
-            $packetID = $br->readUInt16();
-            $br->readBytes(1);
-            $packetLength = $br->readUInt32();
-            $position = $br->getPosition();
-            $EOF = $br->getEofPosition();
-            if($packetLength > $EOF - $position)
-            {
-                Log::info("Invalid Packet!");
-                $packetEnd = true;
-                break;
-            }
+            $packetID = $stream->readUInt16();
+            $stream->readBytes(1);
+            $packetLength = $stream->readUInt32();
+            if($packetLength > 4096 && $stream->canReadBytes($packetLength)) break;
             switch($packetID)
             {
                 case Packets::IN_SetUserState:
-                    $status = new bUserStatus();
-                    $status->bUserStatus($br);
+                    $bUserStatus->readUserStatus($stream);
                     break;
                 case Packets::IN_KeepAlive:
                     break;
                 case Packets::IN_ReceivePM:
                 case Packets::IN_RecieveChatMSG:
-                    $chat = new bChat();
-                    $chat->bChat($br);
+                    $bChat->readMessage($stream);
                     break;
                 case Packets::IN_OnlineStats:
-                    $userList = new bUserList();
-                    $userList->listUserData($br);
+                    $bUserList->getOnlineStats($stream);
                     break;
                 case Packets::IN_BeatmapInformation:
+                    $packetEnd = true;
+                    break;
+                case Packets::IN_Logout:
+                case Packets::IN_LocalUpdate:
+                case Packets::IN_StartSpectating:
+                case Packets::IN_StopSpectating:
+                case Packets::IN_SpectatingData:
+                case Packets::IN_MPLeave:
+                case Packets::IN_MPJoin:
+                case Packets::IN_RoomCreate:
+                case Packets::IN_RoomJoin:
+                case Packets::IN_RoomLeave:
+                    $packetEnd = true;
+                    break;
+                case Packets::IN_LeaveChannel:
+                    $bChat->readChannel($stream);
+                    $bChat->leaveChannel($userID);
+                    break;
+                case Packets::IN_JoinChannel:
+                    $bChat->readChannel($stream);
+                    $bChat->joinChannel($userID);
+                    break;
+                case Packets::IN_AddFriend:
+                case Packets::IN_RemoveFriend:
+                case Packets::IN_OnlinePlayers:
+                case Packets::IN_RoomInvite:
                     $packetEnd = true;
                     break;
                 default:
