@@ -233,7 +233,7 @@ class Packet {
             $packetID = $stream->readUInt16();
             $stream->readBytes(1);
             $packetLength = $stream->readUInt32();
-            if($packetLength > 4096 && $stream->canReadBytes($packetLength)) break;
+            if($packetLength > 4096 && !($stream->canReadBytes($packetLength))) break;
             switch($packetID)
             {
                 case Packets::IN_SetUserState:
