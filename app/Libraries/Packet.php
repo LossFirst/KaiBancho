@@ -2,12 +2,9 @@
 
 namespace App\Libraries;
 
-use App\Serializables\bChat;
-use App\Serializables\bUserList;
-use App\Serializables\bUserStatus;
 use Log;
-use App\Libraries\PhpBinaryReader\BinaryReader as BinaryReader;
-Use App\Libraries\PhpBinaryReader\Endian as Endian;
+use App\Libraries\PhpBinaryReader\BinaryReader;
+Use App\Libraries\PhpBinaryReader\Endian;
 
 class Packet {
     public function create($type, $data = null) {

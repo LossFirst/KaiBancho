@@ -3,11 +3,11 @@
 namespace App\Libraries;
 
 use App\Libraries\PhpBinaryReader\BinaryWriter;
+use App\Libraries\PhpBinaryReader\BinaryReader;
 use App\Serializables\bChat;
 use App\Serializables\bUserList;
 use App\Serializables\bUserStatus;
 use Log;
-use App\Libraries\PhpBinaryReader\BinaryReader as BinaryReader;
 
 class newPacket
 {
