@@ -3,6 +3,7 @@
 namespace App\Libraries\PhpBinaryReader\Type;
 
 use App\Libraries\PhpBinaryReader\BinaryReader;
+use App\Libraries\PhpBinaryReader\BinaryWriter;
 use App\Libraries\PhpBinaryReader\BitMask;
 use App\Libraries\PhpBinaryReader\Endian;
 
@@ -101,5 +102,10 @@ class Int32 implements TypeInterface
     public function getEndianLittle()
     {
         return $this->endianLittle;
+    }
+
+    public function write(BinaryWriter &$bw, $value)
+    {
+        $bw->inputHandle = array_merge($bw->inputHandle, unpack('C*', pack('V*', $value)));
     }
 }

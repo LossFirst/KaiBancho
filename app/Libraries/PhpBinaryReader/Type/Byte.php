@@ -4,6 +4,7 @@ namespace App\Libraries\PhpBinaryReader\Type;
 
 use App\Libraries\PhpBinaryReader\BinaryReader;
 use App\Libraries\PhpBinaryReader\Exception\InvalidDataException;
+use App\Libraries\PhpBinaryReader\BinaryWriter;
 
 class Byte implements TypeInterface
 {
@@ -28,4 +29,13 @@ class Byte implements TypeInterface
         $segment = $br->readFromHandle($length);
         return $segment;
     }
+
+    /**
+     * @param BinaryWriter $bw
+     * @param $value
+     */
+    public function write(BinaryWriter &$bw, $value)
+    {
+        $bw->inputHandle = array_merge($bw->inputHandle, array($value));
+	}
 }

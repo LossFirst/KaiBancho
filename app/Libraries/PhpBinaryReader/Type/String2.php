@@ -4,6 +4,7 @@ namespace App\Libraries\PhpBinaryReader\Type;
 
 use App\Libraries\Helper;
 use App\Libraries\PhpBinaryReader\BinaryReader;
+use App\Libraries\PhpBinaryReader\BinaryWriter;
 use App\Libraries\PhpBinaryReader\Exception\InvalidDataException;
 
 class String2 implements TypeInterface
@@ -58,5 +59,10 @@ class String2 implements TypeInterface
         if($shift == 1) $br->setPosition($pos);
         $string = $br->readString($length);
         return $string;
+    }
+
+    public function write(BinaryWriter &$bw, $value)
+    {
+        $bw->inputHandle = array_merge($bw->inputHandle, unpack('C*', $value));
     }
 }

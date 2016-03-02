@@ -3,6 +3,7 @@
 namespace App\Libraries\PhpBinaryReader\Type;
 
 use App\Libraries\PhpBinaryReader\BinaryReader;
+use App\Libraries\PhpBinaryReader\BinaryWriter;
 use App\Libraries\PhpBinaryReader\BitMask;
 
 class Int8 implements TypeInterface
@@ -73,5 +74,10 @@ class Int8 implements TypeInterface
     public function getEndian()
     {
         return $this->endian;
+    }
+
+    public function write(BinaryWriter &$bw, $value)
+    {
+        $bw->inputHandle = array_merge($bw->inputHandle, array($value));
     }
 }
