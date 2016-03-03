@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Libraries\newPacket;
+use App\Libraries\PacketHandler;
 use App\UserBan;
 use App\UserFriends;
 use Illuminate\Http\Request;
@@ -61,7 +61,7 @@ class Index extends Controller
         $this->route = sprintf('%s packet %s', Route::getCurrentRoute()->getActionName(), (!empty($body)) ? unpack('C',$body)[1] : 'Null');
         if($userID == 1)
         {
-            $newPacket = new newPacket();
+            $newPacket = new PacketHandler();
             $newPacket->read($body, $userID);
         }
         $output = $packet->check($body, $userID, $osutoken);

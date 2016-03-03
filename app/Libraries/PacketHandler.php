@@ -9,7 +9,7 @@ use App\Serializables\bUserList;
 use App\Serializables\bUserStatus;
 use Log;
 
-class newPacket
+class PacketHandler
 {
     private $output = array();
 
@@ -22,6 +22,8 @@ class newPacket
                 $stream->writeULEB128($data[1]);
                 $stream->writeULEB128($data[2]);
                 $stream->writeUInt32($data[3]);
+                break;
+            case Packets::OUT_PlayerLocaleInfo:
                 break;
             default:
                 break;

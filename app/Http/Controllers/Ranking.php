@@ -46,7 +46,7 @@ class Ranking extends Controller
         $beatmapID = $request->query("i");
         $beatmap = $rankingLib->getBeatmapData($checksum, $beatmapID);
         $helper = new Helper();
-        $output = "2|"; //-1 = Not Submitted, 0 = Pending, 1 = unknown, 2 = Ranked, 3 = Approved
+        $output = sprintf("%d|", (($beatmap === null) ? -1 : 2)); //-1 = Not Submitted, 0 = Pending, 1 = unknown, 2 = Ranked, 3 = Approved
         $output .= "false|"; //Need more info
         $output .= sprintf("%s|", (($beatmap === null) ? $request->query("i") : $beatmap->beatmap_id)); //Beatmap ID
         $output .= sprintf("%d|", (($beatmap === null) ? 0 : $beatmap->beatmapset_id)); //Beatmap Set ID
@@ -88,23 +88,24 @@ class Ranking extends Controller
                 $currentTime = Carbon::now();
                 $user = User::where('name', $score[1])->first();
                 $beatmap = OsuBeatmaps::where('checksum', $score[0])->first();
-                if($score[14] === 'True')
-                {
-                    $fileName = sprintf("replay_%d%d%d.osr", $beatmap->beatmap_id, $user->id, strtotime($currentTime));
-                    $request->file('score')->move(base_path() . config('bancho.replayDestination'), $fileName);
-                }
                 if ($beatmap !== null) {
-                    if ($score[15] === "0")
-                        $rankingLib->submitOsuScore($beatmap, $score, $mods, $currentTime);
-                    elseif ($score[15] === "1")
-                        $rankingLib->submitTaikoScore($beatmap, $score, $mods, $currentTime);
-                    elseif ($score[15] === "2")
-                        $rankingLib->submitCTBScore($beatmap, $score, $mods, $currentTime);
-                    else
-                        $rankingLib->submitManiaScore($beatmap, $score, $mods, $currentTime);
+                    if($score[14] === 'True') {
+                        $fileName = sprintf("replay_%d%d%d.osr", $beatmap->beatmap_id, $user->id, strtotime($currentTime));
+                        $request->file('score')->move(base_path() . config('bancho.replayDestination'), $fileName);
+                        if ($score[15] === "0")
+                            $rankingLib->submitOsuScore($beatmap, $score, $mods, $currentTime);
+                        elseif ($score[15] === "1")
+                            $rankingLib->submitTaikoScore($beatmap, $score, $mods, $currentTime);
+                        elseif ($score[15] === "2")
+                            $rankingLib->submitCTBScore($beatmap, $score, $mods, $currentTime);
+                        else
+                            $rankingLib->submitManiaScore($beatmap, $score, $mods, $currentTime);
+                    }
                 }
+                else return "error: disabled";
             }
         }
+        else return "error: disabled";
         return "";
     }
 
