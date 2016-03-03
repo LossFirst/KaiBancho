@@ -11,17 +11,17 @@ use Log;
 
 class PacketHandler
 {
-    private $output = array();
+    public $output = array();
 
     public function create($type, $data = null) {
         $stream = new BinaryWriter();
         $endStream = new BinaryWriter();
         switch ($type) {
             case Packets::OUT_SendChatMSG:
-                $stream->writeULEB128($data[0]);
-                $stream->writeULEB128($data[1]);
-                $stream->writeULEB128($data[2]);
-                $stream->writeUInt32($data[3]);
+                $stream->writeULEB128($data['UserName']);
+                $stream->writeULEB128($data['Message']);
+                $stream->writeULEB128($data['Receiver']);
+                $stream->writeUInt32($data['UserID']);
                 break;
             case Packets::OUT_PlayerLocaleInfo:
                 break;
@@ -62,11 +62,12 @@ class PacketHandler
                     $bUserStatus->readUserStatus();
                     break;
                 case Packets::IN_KeepAlive:
+                    $bChat->receiveMessage($userID);
                     break;
                 case Packets::IN_ReceivePM:
                 case Packets::IN_RecieveChatMSG:
                     $bChat->readMessage();
-                    $this->create(Packets::OUT_SendChatMSG, array($user->name, $bChat->message, $bChat->reciever, $userID));
+                    $bChat->sendMessage($userID);
                     break;
                 case Packets::IN_OnlineStats:
                     $bUserList->getOnlineStats();

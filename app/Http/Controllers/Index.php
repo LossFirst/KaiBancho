@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Libraries\PacketHandler;
+use App\Serializables\bChat;
 use App\UserBan;
 use App\UserFriends;
 use Illuminate\Http\Request;
@@ -100,6 +101,12 @@ class Index extends Controller
                         $packet->create(Packets::OUT_ChannelList, array('#news', 'This will contain announcements and info, while beta lasts.', 1)),
                         $packet->create(Packets::OUT_Announcement, "http://puu.sh/jh7t7/20c04029ad.png|https://osu.ppy.sh/news/123912240253")
                     );
+                    if($user->id == 1)
+                    {
+                        $chat = new bChat();
+                        $chat->joinChannel($user->id, '#osu');
+                        $chat->joinChannel($user->id, '#news');
+                    }
                     $player->setToken($token, $user);
                 } else {
                     $currentTime = Carbon::now();

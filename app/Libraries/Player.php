@@ -115,11 +115,8 @@ class Player {
 
     public function getDatafromID($id)
     {
-        if($id != -1) {
-            $user = User::find($id);
-            return $user;
-        }
-        return false;
+        $user = User::find($id);
+        return $user;
     }
 
     public function getDatafromToken($token = null)

@@ -83,4 +83,14 @@ class Helper {
         $iv = base64_decode($iv);
         return mcrypt_decrypt(MCRYPT_RIJNDAEL_256, is_null($version) ? config('bancho.decryptionKey') : sprintf("osu!-scoreburgr---------%s", $version), $text, MCRYPT_MODE_CBC, $iv);
     }
+
+    public function getTimestamp($asString=false){
+        $seconds = microtime(true); // false = int, true = float
+        $stamp = round($seconds * 10000);
+        if($asString == true){
+            return sprintf('%.0f', $stamp);
+        } else {
+            return $stamp;
+        }
+    }
 }
