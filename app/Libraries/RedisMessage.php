@@ -5,8 +5,16 @@ namespace App\Libraries;
 use Redis;
 use Log;
 
+/**
+ * Class RedisMessage
+ * @package App\Libraries
+ */
 class RedisMessage
 {
+    /**
+     * @param $userID
+     * @return array
+     */
     public function GetMessage($userID)
     {
         $redis = Redis::connection();
@@ -24,6 +32,11 @@ class RedisMessage
         return $chatMessage;
     }
 
+    /**
+     * @param $user
+     * @param $messageData
+     * @return bool
+     */
     public function SendMessage($user, $messageData)
     {
         $redis = Redis::connection();
@@ -55,6 +68,10 @@ class RedisMessage
         return true;
     }
 
+    /**
+     * @param bool $asString
+     * @return float|string
+     */
     function getTimestamp($asString=false){
         $seconds = microtime(true); // false = int, true = float
         $stamp = round($seconds * 10000);
@@ -65,6 +82,10 @@ class RedisMessage
         }
     }
 
+    /**
+     * @param $message
+     * @return bool
+     */
     function isCommand($message)
     {
         if(substr($message, 0) == "!")
@@ -75,6 +96,11 @@ class RedisMessage
         }
     }
 
+    /**
+     * @param $message
+     * @param $user
+     * @param $channel
+     */
     function command($message, $user, $channel)
     {
         $command = explode(' ', $message);

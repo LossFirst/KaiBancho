@@ -71,31 +71,49 @@ class BinaryWriter
         $this->helper = new Helper();
     }
 
+    /**
+     * @param $bytes
+     */
     public function writeBytes($bytes)
     {
         $this->byteWriter->write($this, $bytes);
     }
 
+    /**
+     * @param $value
+     */
     public function writeUInt8($value)
     {
         $this->int8Writer->write($this, $value);
     }
 
+    /**
+     * @param $value
+     */
     public function writeUInt16($value)
     {
         $this->int16Writer->write($this, $value);
     }
 
+    /**
+     * @param $value
+     */
     public function writeUInt32($value)
     {
         $this->int32Writer->write($this, $value);
     }
 
+    /**
+     * @param $value
+     */
     public function writeString($value)
     {
         $this->stringWriter->write($this, $value);
     }
 
+    /**
+     * @param $string
+     */
     public function writeULEB128($string)
     {
         $this->byteWriter->write($this, 11);

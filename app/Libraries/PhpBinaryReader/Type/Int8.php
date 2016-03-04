@@ -76,6 +76,10 @@ class Int8 implements TypeInterface
         return $this->endian;
     }
 
+    /**
+     * @param BinaryWriter $bw
+     * @param $value
+     */
     public function write(BinaryWriter &$bw, $value)
     {
         $bw->inputHandle = array_merge($bw->inputHandle, array($value));

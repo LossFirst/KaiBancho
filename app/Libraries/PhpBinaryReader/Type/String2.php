@@ -61,6 +61,10 @@ class String2 implements TypeInterface
         return $string;
     }
 
+    /**
+     * @param BinaryWriter $bw
+     * @param $value
+     */
     public function write(BinaryWriter &$bw, $value)
     {
         $bw->inputHandle = array_merge($bw->inputHandle, unpack('C*', $value));

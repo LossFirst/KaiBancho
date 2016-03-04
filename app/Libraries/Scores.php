@@ -9,7 +9,16 @@ use DB;
 use Log;
 use Carbon\Carbon;
 
+/**
+ * Class Scores
+ * @package App\Libraries
+ */
 class Scores {
+    /**
+     * @param $checksum
+     * @param $beatmapID
+     * @return mixed
+     */
     public function getBeatmapData($checksum, $beatmapID)
     {
         $beatmap = Cache::get(sprintf("%s:%s", $checksum, $beatmapID), function() use ($checksum, $beatmapID) {
@@ -51,6 +60,12 @@ class Scores {
         return $beatmap;
     }
 
+    /**
+     * @param $checksum
+     * @param $user
+     * @param $mode
+     * @return mixed|static
+     */
     public function getUserRanking($checksum, $user, $mode)
     {
         $table = '';
@@ -72,6 +87,11 @@ class Scores {
         return DB::table($table)->where('user_id', '=', $user->id)->where('beatmapHash', '=', $checksum)->select('id','user_id','score','combo','count50','count100','count300','countMiss','countKatu','countGeki','fc','mods', DB::raw(sprintf("FIND_IN_SET( score, (SELECT GROUP_CONCAT( score ORDER BY score DESC ) FROM osu_scores WHERE beatmapHash = '%s' )) AS rank", $checksum)),'created_at')->orderBy('rank','asc')->first();
     }
 
+    /**
+     * @param $checksum
+     * @param $mode
+     * @return array|static[]
+     */
     public function getRankings($checksum, $mode)
     {
         $table = '';
@@ -93,6 +113,12 @@ class Scores {
         return DB::table($table)->select('id','user_id','score','combo','count50','count100','count300','countMiss','countKatu','countGeki','fc','mods', DB::raw(sprintf("FIND_IN_SET( score, (SELECT GROUP_CONCAT( score ORDER BY score DESC ) FROM osu_scores WHERE beatmapHash = '%s' )) AS rank", $checksum)),'created_at')->where('beatmapHash', '=', $checksum)->orderBy('rank','asc')->limit(50)->get();
     }
 
+    /**
+     * @param $beatmap
+     * @param $score
+     * @param $mods
+     * @param $currentTime
+     */
     public function submitOsuScore($beatmap, $score, $mods, $currentTime)
     {
         $beatmap->playcount = $beatmap->playcount + 1;
@@ -179,6 +205,12 @@ class Scores {
         $beatmap->save();
     }
 
+    /**
+     * @param $beatmap
+     * @param $score
+     * @param $mods
+     * @param $currentTime
+     */
     public function submitTaikoScore($beatmap, $score, $mods, $currentTime)
     {
         $beatmap->playcount = $beatmap->playcount + 1;
@@ -265,6 +297,12 @@ class Scores {
         $beatmap->save();
     }
 
+    /**
+     * @param $beatmap
+     * @param $score
+     * @param $mods
+     * @param $currentTime
+     */
     public function submitManiaScore($beatmap, $score, $mods, $currentTime)
     {
         $beatmap->playcount = $beatmap->playcount + 1;
@@ -351,6 +389,12 @@ class Scores {
         $beatmap->save();
     }
 
+    /**
+     * @param $beatmap
+     * @param $score
+     * @param $mods
+     * @param $currentTime
+     */
     public function submitCTBScore($beatmap, $score, $mods, $currentTime)
     {
         $beatmap->playcount = $beatmap->playcount + 1;
@@ -437,6 +481,13 @@ class Scores {
         $beatmap->save();
     }
 
+    /**
+     * @param $bmhash
+     * @param $acc
+     * @param $mods
+     * @param $score
+     * @return mixed
+     */
     public function calcPP($bmhash, $acc, $mods, $score)
     {
         $X = 1.1;
@@ -449,6 +500,13 @@ class Scores {
         return $pp;
     }
 
+    /**
+     * @param $beatmap
+     * @param $mods
+     * @param $score
+     * @param $accuracy
+     * @return mixed
+     */
     function calcAimPP($beatmap, $mods, $score, $accuracy)
     {
         $ar = $beatmap->diff_approach;
@@ -468,6 +526,13 @@ class Scores {
         return ((($csValue + $arValue + $lengthValue + $comboMissValue)) * $accuracy);
     }
 
+    /**
+     * @param $beatmap
+     * @param $mods
+     * @param $score
+     * @param $accuracy
+     * @return mixed
+     */
     function calcSpeedPP($beatmap, $mods, $score, $accuracy)
     {
         $length = $beatmap->hit_length;
@@ -485,6 +550,13 @@ class Scores {
         return ((($drainValue + $lengthValue + $comboMissValue)) * $accuracy);
     }
 
+    /**
+     * @param $beatmap
+     * @param $mods
+     * @param $score
+     * @param $accuracy
+     * @return mixed
+     */
     function calcAccPP($beatmap, $mods, $score, $accuracy)
     {
         $od = $beatmap->diff_overall;
@@ -499,6 +571,11 @@ class Scores {
         return ((($odValue + $lengthValue + $accuracy) * 3) * $accuracy);
     }
 
+    /**
+     * @param $mods
+     * @param $calc
+     * @return mixed
+     */
     function calcMods($mods, $calc)
     {
         if ($mods->doubletime || $mods->nightcore) {
@@ -528,6 +605,10 @@ class Scores {
         return $calc;
     }
 
+    /**
+     * @param $mods
+     * @return object
+     */
     public function mods($mods)
     {
         $array = (object)array();
@@ -549,6 +630,13 @@ class Scores {
         return $array;
     }
 
+    /**
+     * @param $c300
+     * @param $c100
+     * @param $c50
+     * @param $cMiss
+     * @return float|int
+     */
     function getAccuracyAlt($c300, $c100, $c50, $cMiss)
     {
         $totalHits = ($c50 + $c100 + $c300 + $cMiss) * 300;

@@ -4,7 +4,16 @@ namespace App\Libraries;
 use Redis;
 use Log;
 
+/**
+ * Class RedisPacket
+ * @package App\Libraries
+ */
 class RedisPacket {
+    /**
+     * @param $userID
+     * @param string $packetID
+     * @return array
+     */
     public function GetPackets($userID, $packetID = "")
     {
         $redis = Redis::connection();
@@ -28,6 +37,12 @@ class RedisPacket {
         return $redisPackets;
     }
 
+    /**
+     * @param $userID
+     * @param $packetID
+     * @param $packetData
+     * @return bool
+     */
     public function CreatePacket($userID, $packetID, $packetData)
     {
         $redis = Redis::connection();
@@ -41,6 +56,10 @@ class RedisPacket {
         return true;
     }
 
+    /**
+     * @param bool $asString
+     * @return float|string
+     */
     function getTimestamp($asString=false){
         $seconds = microtime(true); // false = int, true = float
         $stamp = round($seconds * 10000);

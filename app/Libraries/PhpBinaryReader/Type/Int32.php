@@ -104,6 +104,10 @@ class Int32 implements TypeInterface
         return $this->endianLittle;
     }
 
+    /**
+     * @param BinaryWriter $bw
+     * @param $value
+     */
     public function write(BinaryWriter &$bw, $value)
     {
         $bw->inputHandle = array_merge($bw->inputHandle, unpack('C*', pack('V*', $value)));

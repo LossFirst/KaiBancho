@@ -19,6 +19,10 @@ class bChat
     private $redis;
     private $stream;
 
+    /**
+     * bChat constructor.
+     * @param BinaryReader|null $stream
+     */
     public function __construct(BinaryReader &$stream = null)
     {
         if($stream != null) $this->stream = $stream;
@@ -37,6 +41,10 @@ class bChat
         $this->channel = $this->stream->readULEB128();
     }
 
+    /**
+     * @param $playerID
+     * @param null $channel
+     */
     public function joinChannel($playerID, $channel = null)
     {
         if($channel != null) $this->channel = $channel;
@@ -46,6 +54,9 @@ class bChat
         log::info($redis->smembers($key));
     }
 
+    /**
+     * @param $playerID
+     */
     public function leaveChannel($playerID)
     {
         $redis = Redis::connection();
@@ -54,6 +65,9 @@ class bChat
         log::info($redis->smembers($key));
     }
 
+    /**
+     * @param $playerID
+     */
     public function sendMessage($playerID)
     {
         $playerHelper = new Player();
@@ -91,6 +105,9 @@ class bChat
         }
     }
 
+    /**
+     * @param $playerID
+     */
     public function receiveMessage($playerID)
     {
         $channels = $this->redis->smembers(sprintf("UserInfo:%d", $playerID));

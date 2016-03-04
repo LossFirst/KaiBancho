@@ -8,7 +8,14 @@ use Log;
 use DB;
 use Redis;
 
+/**
+ * Class Player
+ * @package App\Libraries
+ */
 class Player {
+    /**
+     * @return array
+     */
     public function getAllTokens()
     {
         $redis = Redis::connection();
@@ -16,6 +23,11 @@ class Player {
         return $allKeys;
     }
 
+    /**
+     * @param $token
+     * @param bool $format
+     * @return string
+     */
     public function getIDfromToken($token, $format = false)
     {
         if($format)
@@ -27,6 +39,10 @@ class Player {
         return $redis->get($token);
     }
 
+    /**
+     * @param $tokens
+     * @return array
+     */
     public function getAllIDs($tokens)
     {
         $output = array();
@@ -37,6 +53,9 @@ class Player {
         return $output;
     }
 
+    /**
+     * @return array
+     */
     public function getOnline()
     {
         $packet = new Packet();
@@ -51,6 +70,10 @@ class Player {
         return $output;
     }
 
+    /**
+     * @param $ids
+     * @return array
+     */
     public function getOnlineDetailed($ids)
     {
         $packet = new Packet();
@@ -67,6 +90,10 @@ class Player {
         return $output;
     }
 
+    /**
+     * @param $id
+     * @return array
+     */
     public function getFriends($id)
     {
         $friends = UserFriends::where('user_id', $id)->get();
@@ -78,6 +105,10 @@ class Player {
         return $friendsList;
     }
 
+    /**
+     * @param $id
+     * @return mixed
+     */
     public function getStatus($id)
     {
         $redis = Redis::connection();
@@ -85,17 +116,29 @@ class Player {
         return json_decode($data, true);
     }
 
+    /**
+     * @param $userid
+     * @param $friendid
+     */
     public function addFriend($userid, $friendid)
     {
         UserFriends::create(['user_id' => $userid, 'friended_id' => $friendid])->save();
     }
 
+    /**
+     * @param $userid
+     * @param $exfriendid
+     */
     public function removeFriend($userid, $exfriendid)
     {
         $friend = UserFriends::where('user_id', $userid)->where('friended_id', $exfriendid)->first();
         $friend->delete();
     }
 
+    /**
+     * @param $id
+     * @param $data
+     */
     public function setStatus($id, $data)
     {
         $redis = Redis::connection();
@@ -103,6 +146,10 @@ class Player {
         $redis->expire(sprintf("UserStatus:%d", $id), (60 * 5));
     }
 
+    /**
+     * @param $id
+     * @return bool
+     */
     public function isIDOnline($id)
     {
         $redis = Redis::connection();
@@ -113,12 +160,20 @@ class Player {
         return false;
     }
 
+    /**
+     * @param $id
+     * @return mixed
+     */
     public function getDatafromID($id)
     {
         $user = User::find($id);
         return $user;
     }
 
+    /**
+     * @param null $token
+     * @return bool|mixed
+     */
     public function getDatafromToken($token = null)
     {
         if(!is_null($token)) {
@@ -128,6 +183,10 @@ class Player {
         return false;
     }
 
+    /**
+     * @param $player
+     * @return array
+     */
     public function getData($player)
     {
         return array(
@@ -142,6 +201,11 @@ class Player {
         );
     }
 
+    /**
+     * @param $player
+     * @param int $mode
+     * @return int
+     */
     public function getUserRank($player, $mode = 0)
     {
         switch($mode)
@@ -174,6 +238,10 @@ class Player {
         return 0;
     }
 
+    /**
+     * @param $player
+     * @return array
+     */
     public function getDataDetailed($player)
     {
         $status = $this->getStatus($player->id);
@@ -217,11 +285,19 @@ class Player {
         );
     }
 
+    /**
+     * @param $name
+     * @return mixed
+     */
     public function getDataFromName($name)
     {
         return User::where('name', $name)->first();
     }
 
+    /**
+     * @param $name
+     * @return bool|mixed
+     */
     public function isPlayerOnline($name)
     {
         $ids = $this->getAllIDs($this->getAllTokens());
@@ -236,6 +312,10 @@ class Player {
         return false;
     }
 
+    /**
+     * @param $token
+     * @param $user
+     */
     public function setToken($token, $user)
     {
         $redis = Redis::connection();
@@ -245,6 +325,10 @@ class Player {
         $redis->expire(sprintf("CurrentlyLoggedInID:%d", $user->id), 30);
     }
 
+    /**
+     * @param $token
+     * @param $userID
+     */
     public function updateToken($token, $userID)
     {
         $redis = Redis::connection();
@@ -252,12 +336,19 @@ class Player {
         $redis->expire(sprintf("CurrentlyLoggedInID:%d", $userID), 30);
     }
 
+    /**
+     * @param $token
+     */
     public function expireToken($token)
     {
         $redis = Redis::connection();
         $redis->del(sprintf("CurrentlyLoggedIn:%s", $token));
     }
 
+    /**
+     * @param $player
+     * @return float|int
+     */
     public function getExp($player)
     {
         $currentScore = $player->OsuUserStats->total_score;
@@ -276,6 +367,11 @@ class Player {
         return ($result - $currentScore);
     }
 
+    /**
+     * @param $player
+     * @param int $mode
+     * @return float|int
+     */
     public function getAccuracy($player, $mode = 0)
     {
         switch($mode)

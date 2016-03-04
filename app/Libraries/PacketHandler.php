@@ -9,10 +9,21 @@ use App\Serializables\bUserList;
 use App\Serializables\bUserStatus;
 use Log;
 
+/**
+ * Class PacketHandler
+ * @package App\Libraries
+ */
 class PacketHandler
 {
+    /**
+     * @var array
+     */
     public $output = array();
 
+    /**
+     * @param $type
+     * @param null $data
+     */
     public function create($type, $data = null) {
         $stream = new BinaryWriter();
         $endStream = new BinaryWriter();
@@ -34,6 +45,10 @@ class PacketHandler
         $this->output = array_merge($this->output, array_merge($endStream->inputHandle, $stream->inputHandle));
     }
 
+    /**
+     * @param $data
+     * @param $userID
+     */
     public function read($data, $userID)
     {
         $stream = new BinaryReader($data);
@@ -72,21 +87,6 @@ class PacketHandler
                 case Packets::IN_OnlineStats:
                     $bUserList->getOnlineStats();
                     break;
-                case Packets::IN_BeatmapInformation:
-                    $packetEnd = true;
-                    break;
-                case Packets::IN_Logout:
-                case Packets::IN_LocalUpdate:
-                case Packets::IN_StartSpectating:
-                case Packets::IN_StopSpectating:
-                case Packets::IN_SpectatingData:
-                case Packets::IN_MPLeave:
-                case Packets::IN_MPJoin:
-                case Packets::IN_RoomCreate:
-                case Packets::IN_RoomJoin:
-                case Packets::IN_RoomLeave:
-                    $packetEnd = true;
-                    break;
                 case Packets::IN_LeaveChannel:
                     $bChat->readChannel();
                     $bChat->leaveChannel($userID);
@@ -99,6 +99,17 @@ class PacketHandler
                 case Packets::IN_RemoveFriend:
                 case Packets::IN_OnlinePlayers:
                 case Packets::IN_RoomInvite:
+                case Packets::IN_Logout:
+                case Packets::IN_LocalUpdate:
+                case Packets::IN_StartSpectating:
+                case Packets::IN_StopSpectating:
+                case Packets::IN_SpectatingData:
+                case Packets::IN_MPLeave:
+                case Packets::IN_MPJoin:
+                case Packets::IN_RoomCreate:
+                case Packets::IN_RoomJoin:
+                case Packets::IN_RoomLeave:
+                case Packets::IN_BeatmapInformation:
                     $packetEnd = true;
                     break;
                 default:

@@ -9,6 +9,10 @@ class bUserList
     public $userList;
     private $stream;
 
+    /**
+     * bUserList constructor.
+     * @param BinaryReader $stream
+     */
     public function __construct(BinaryReader &$stream)
     {
         $this->stream = $stream;

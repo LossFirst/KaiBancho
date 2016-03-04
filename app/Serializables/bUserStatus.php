@@ -15,6 +15,10 @@ class bUserStatus
     public $status = 0;
     private $stream;
 
+    /**
+     * bUserStatus constructor.
+     * @param BinaryReader $stream
+     */
     public function __construct(BinaryReader &$stream)
     {
         $this->stream = $stream;
@@ -30,6 +34,9 @@ class bUserStatus
         $this->something = $this->stream->readUInt32();
     }
 
+    /**
+     * @param $userID
+     */
     public function updateUserStatus($userID)
     {
         $redis = Redis::connection();
