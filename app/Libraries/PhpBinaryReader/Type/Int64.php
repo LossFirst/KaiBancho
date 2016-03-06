@@ -4,34 +4,38 @@ namespace App\Libraries\PhpBinaryReader\Type;
 
 use App\Libraries\PhpBinaryReader\BinaryReader;
 use App\Libraries\PhpBinaryReader\BinaryWriter;
-use App\Libraries\PhpBinaryReader\BitMask;
 use App\Libraries\PhpBinaryReader\Endian;
+use App\Libraries\PhpBinaryReader\BitMask;
+use Log;
 
-class Int32 implements TypeInterface
+/**
+ * Class Int64
+ * @package App\Libraries\PhpBinaryReader\Type
+ */
+class Int64
 {
     /**
      * @var string
      */
-    private $endianBig = 'N';
+    private $endianBig = 'J';
+
     /**
      * @var string
      */
-    private $endianLittle = 'V';
+    private $endianLittle = 'P';
+
     /**
-     * Returns an Unsigned 32-bit Integer
-     *
-     * @param  BinaryReader $br
-     * @param  null                          $length
-     * @return int
-     * @throws \OutOfBoundsException
+     * @param BinaryReader $br
+     * @param null $length
+     * @return array
      */
     public function read(BinaryReader &$br, $length = null)
     {
-        if (!$br->canReadBytes(4)) {
-            throw new \OutOfBoundsException('Cannot read 32-bit int, it exceeds the boundary of the file');
+        if (!$br->canReadBytes(8)) {
+            throw new \OutOfBoundsException('Cannot read 64-bit int, it exceeds the boundary of the file');
         }
         $endian = $br->getEndian() == Endian::ENDIAN_BIG ? $this->endianBig : $this->endianLittle;
-        $segment = $br->readFromHandle(4);
+        $segment = $br->readFromHandle(8);
         $data = unpack($endian, $segment);
         $data = $data[1];
         if ($br->getCurrentBit() != 0) {
@@ -39,26 +43,7 @@ class Int32 implements TypeInterface
         }
         return $data;
     }
-    /**
-     * Returns a Signed 32-Bit Integer
-     *
-     * @param  BinaryReader $br
-     * @return int
-     */
-    public function readSigned(&$br)
-    {
-        $this->setEndianBig('l');
-        $this->setEndianLittle('l');
-        $value = $this->read($br);
-        $this->setEndianBig('N');
-        $this->setEndianLittle('V');
-        if ($br->getMachineByteOrder() != Endian::ENDIAN_LITTLE && $br->getEndian() == Endian::ENDIAN_LITTLE) {
-            $endian = new Endian();
-            return $endian->convert($value);
-        } else {
-            return $value;
-        }
-    }
+
     /**
      * @param  BinaryReader $br
      * @param  int                           $data
@@ -70,18 +55,20 @@ class Int32 implements TypeInterface
         $loMask = $bitmask->getMask($br->getCurrentBit(), BitMask::MASK_LO);
         $hiMask = $bitmask->getMask($br->getCurrentBit(), BitMask::MASK_HI);
         $hiBits = ($br->getNextByte() & $hiMask) << 24;
-        $miBits = ($data & 0xFFFFFF00) >> (8 - $br->getCurrentBit());
+        $miBits = ($data & 0xFFFF00) >> (8 - $br->getCurrentBit());
         $loBits = ($data & $loMask);
         $br->setNextByte($data & 0xFF);
         return $hiBits | $miBits | $loBits;
     }
+
     /**
-     * @param string $endianBig
+     * @param $endianBig
      */
     public function setEndianBig($endianBig)
     {
         $this->endianBig = $endianBig;
     }
+
     /**
      * @return string
      */
@@ -89,13 +76,15 @@ class Int32 implements TypeInterface
     {
         return $this->endianBig;
     }
+
     /**
-     * @param string $endianLittle
+     * @param $endianLittle
      */
     public function setEndianLittle($endianLittle)
     {
         $this->endianLittle = $endianLittle;
     }
+
     /**
      * @return string
      */
@@ -110,6 +99,6 @@ class Int32 implements TypeInterface
      */
     public function write(BinaryWriter &$bw, $value)
     {
-        $bw->inputHandle = array_merge($bw->inputHandle, unpack('C*', pack('V*', $value)));
+        $bw->inputHandle = array_merge($bw->inputHandle, unpack('C*', pack('P', $value)));
     }
 }

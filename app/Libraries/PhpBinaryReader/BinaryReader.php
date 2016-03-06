@@ -8,8 +8,13 @@ use App\Libraries\PhpBinaryReader\Type\Byte;
 use App\Libraries\PhpBinaryReader\Type\Int8;
 use App\Libraries\PhpBinaryReader\Type\Int16;
 use App\Libraries\PhpBinaryReader\Type\Int32;
+use App\Libraries\PhpBinaryReader\Type\Int64;
 use App\Libraries\PhpBinaryReader\Type\String2;
 
+/**
+ * Class BinaryReader
+ * @package App\Libraries\PhpBinaryReader
+ */
 class BinaryReader
 {
     /**
@@ -48,34 +53,39 @@ class BinaryReader
     private $endian;
 
     /**
-     * @var \App\Libraries\PhpBinaryReader\Type\Byte
+     * @var Type\Byte
      */
     private $byteReader;
 
     /**
-     * @var \App\Libraries\PhpBinaryReader\Type\Bit
+     * @var Type\Bit
      */
     private $bitReader;
 
     /**
-     * @var \App\Libraries\PhpBinaryReader\Type\String2
+     * @var Type\String2
      */
     private $stringReader;
 
     /**
-     * @var \App\Libraries\PhpBinaryReader\Type\Int8
+     * @var Type\Int8
      */
     private $int8Reader;
 
     /**
-     * @var \App\Libraries\PhpBinaryReader\Type\Int16
+     * @var Type\Int16
      */
     private $int16Reader;
 
     /**
-     * @var \App\Libraries\PhpBinaryReader\Type\Int32
+     * @var Type\Int32
      */
     private $int32Reader;
+
+    /**
+     * @var Type\Int64
+     */
+    private $int64Reader;
 
     /**
      * @param  string|resource           $input
@@ -103,6 +113,7 @@ class BinaryReader
         $this->int8Reader = new Int8();
         $this->int16Reader = new Int16();
         $this->int32Reader = new Int32();
+        $this->int64Reader = new Int64();
     }
 
     /**
@@ -204,6 +215,14 @@ class BinaryReader
     public function readUInt32()
     {
         return $this->int32Reader->read($this);
+    }
+
+    /**
+     * @return array|int
+     */
+    public function readUInt64()
+    {
+        return $this->int64Reader->read($this);
     }
 
     /**
@@ -389,7 +408,7 @@ class BinaryReader
     }
 
     /**
-     * @return \App\Libraries\PhpBinaryReader\Type\Bit
+     * @return Type\Bit
      */
     public function getBitReader()
     {
@@ -397,7 +416,7 @@ class BinaryReader
     }
 
     /**
-     * @return \App\Libraries\PhpBinaryReader\Type\Byte
+     * @return Type\Byte
      */
     public function getByteReader()
     {
@@ -405,7 +424,7 @@ class BinaryReader
     }
 
     /**
-     * @return \App\Libraries\PhpBinaryReader\Type\Int8
+     * @return Type\Int8
      */
     public function getInt8Reader()
     {
@@ -413,7 +432,7 @@ class BinaryReader
     }
 
     /**
-     * @return \App\Libraries\PhpBinaryReader\Type\Int16
+     * @return Type\Int16
      */
     public function getInt16Reader()
     {
@@ -421,7 +440,7 @@ class BinaryReader
     }
 
     /**
-     * @return \App\Libraries\PhpBinaryReader\Type\Int32
+     * @return Type\Int32
      */
     public function getInt32Reader()
     {
@@ -429,7 +448,15 @@ class BinaryReader
     }
 
     /**
-     * @return \App\Libraries\PhpBinaryReader\Type\String2
+     * @return Type\Int64
+     */
+    public function getInt64Reader()
+    {
+        return $this->int64Reader;
+    }
+
+    /**
+     * @return Type\String2
      */
     public function getStringReader()
     {

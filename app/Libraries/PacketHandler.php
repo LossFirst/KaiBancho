@@ -35,6 +35,17 @@ class PacketHandler
                 $stream->writeUInt32($data['UserID']);
                 break;
             case Packets::OUT_PlayerLocaleInfo:
+                $stream->writeUInt32($data['UserID']);
+                $stream->writeBytes($data['Status']);
+                $stream->writeULEB128($data['Beatmap']);
+                $stream->writeULEB128($data['BeatmapHash']);
+                $stream->writeUInt32($data['Mods']);
+                $stream->writeBytes($data['PlayMode']);
+                $stream->writeUInt64($data['Score']);
+                $stream->writeFloat($data['Accuracy']);
+                $stream->writeUInt64($data['Experience']);
+                $stream->writeUInt32($data['GlobalRank']);
+                $stream->writeUInt16($data['PP']);
                 break;
             default:
                 break;

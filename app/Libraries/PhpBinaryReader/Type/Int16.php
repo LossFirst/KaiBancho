@@ -105,11 +105,11 @@ class Int16 implements TypeInterface
     }
 
     /**
-     * @param BinaryWriter $br
+     * @param BinaryWriter $bw
      * @param $value
      */
-    public function write(BinaryWriter &$br, $value)
+    public function write(BinaryWriter &$bw, $value)
     {
-        $br->inputHandle = array_merge($br->inputHandle, unpack('C*', pack('v*', $value)));
+        $bw->inputHandle = array_merge($bw->inputHandle, unpack('C*', pack('v*', $value)));
     }
 }

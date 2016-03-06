@@ -6,9 +6,11 @@ use App\Libraries\Helper;
 use App\Libraries\PhpBinaryReader\Exception\InvalidDataException;
 use App\Libraries\PhpBinaryReader\Type\Bit;
 use App\Libraries\PhpBinaryReader\Type\Byte;
+use App\Libraries\PhpBinaryReader\Type\FloatingPoint;
 use App\Libraries\PhpBinaryReader\Type\Int8;
 use App\Libraries\PhpBinaryReader\Type\Int16;
 use App\Libraries\PhpBinaryReader\Type\Int32;
+use App\Libraries\PhpBinaryReader\Type\Int64;
 use App\Libraries\PhpBinaryReader\Type\String2;
 
 /**
@@ -54,6 +56,19 @@ class BinaryWriter
      */
     private $int32Writer;
 
+    /**
+     * @var Type\Int64
+     */
+    private $int64Writer;
+
+    /**
+     * @var Type\FloatingPoint
+     */
+    private $floatingPointWriter;
+
+    /**
+     * @var Helper
+     */
     private $helper;
     /**
      * @param  int|string                $endian
@@ -68,6 +83,8 @@ class BinaryWriter
         $this->int8Writer = new Int8();
         $this->int16Writer = new Int16();
         $this->int32Writer = new Int32();
+        $this->int64Writer = new Int64();
+        $this->floatingPointWriter = new FloatingPoint();
         $this->helper = new Helper();
     }
 
@@ -106,9 +123,25 @@ class BinaryWriter
     /**
      * @param $value
      */
+    public function writeUInt64($value)
+    {
+        $this->int64Writer->write($this, $value);
+    }
+
+    /**
+     * @param $value
+     */
     public function writeString($value)
     {
         $this->stringWriter->write($this, $value);
+    }
+
+    /**
+     * @param $value
+     */
+    public function writeFloat($value)
+    {
+        $this->floatingPointWriter->write($this, $value);
     }
 
     /**
@@ -187,11 +220,24 @@ class BinaryWriter
     {
         return $this->int32Writer;
     }
+
+    /**
+     * @return Type\Int64
+     */
+    public function getInt64Writer()
+    {
+        return $this->int64Writer;
+    }
     /**
      * @return Type\String
      */
     public function getStringWriter()
     {
         return $this->stringWriter;
+    }
+
+    public function getFloatingPointWriter()
+    {
+        return $this->floatingPointWriter;
     }
 }

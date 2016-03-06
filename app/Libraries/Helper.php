@@ -2,6 +2,8 @@
 
 namespace App\Libraries;
 
+use Log;
+
 /**
  * Class Helper
  * @package App\Libraries
@@ -67,7 +69,6 @@ class Helper {
         $lowMap = 0x00000000ffffffff;
         $higher = ($value & $highMap) >>32;
         $lower = $value & $lowMap;
-        $packed = pack('NN', $higher, $lower);
         $packed = pack('NN', $higher, $lower);
         return array_reverse(unpack('C*', $packed));
     }

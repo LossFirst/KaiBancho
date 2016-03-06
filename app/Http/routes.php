@@ -111,6 +111,15 @@ Route::get('/web/check-updates.php', function() {
 });
 Route::get('/web/osu-getreplay.php', "Ranking@getReplay");
 Route::get('/w/web/osu-getreplay.php', "Ranking@getReplay");
+Route::get('test', function() {
+    $stream = new \App\Libraries\PhpBinaryReader\BinaryWriter();
+    $stream->writeUInt64('18446744073709551613');
+    echo implode(',',$stream->inputHandle);
+    echo "<br/>";
+    $test = new \App\Libraries\PhpBinaryReader\BinaryReader(implode(array_map("chr", $stream->inputHandle)));
+    $test2 = $test->readUInt64();
+    return $test2;
+});
 Route::post('/', 'Index@postIndex');
 Route::get('/{section}', 'Debug@getDebug')->where(['section' => '.*']);
 Route::post('/{section}', 'Debug@postDebug')->where(['section' => '.*']);

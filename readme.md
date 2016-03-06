@@ -26,22 +26,31 @@ A framework I am creating for fun and educational purposes, thus the reason I pi
 - [X] Replays (Upload and download)
 
 
-## How-to
+### How-to
 
-Not telling you how to setup Laravel/Homestead
+Not telling you how to setup a linux box, Laravel/Homestead VM, webserver, etc.
+
+### Supported Clients
+
+- Fallback
+- Latest
+- Beta
+- Cutting Edge
 
 ### Requirements
 
-- Osu! Fallback/Stable/Cutting Edge/Beta
-- SSL Certificate (Self Signed is required for hosts method using *.ppy.sh)
+- 64-bit Operating System
+- SSL Certificate (Self Signed is required for Latest/Beta/Cutting Edge)
 - Redis
-- HHVM/PHP7/PHP5.6
+- HHVM/PHP7/PHP5.6 64-bit
 - Cron Job (might be used in the future)
 
-New and best method
+### Connection Methods
+
+#### Patcher
 https://github.com/Igoorx/osuPatcher
 
-Hosts Method
+#### Hosts
 ```
 YourIP osu.ppy.sh
 YourIP a.ppy.sh
